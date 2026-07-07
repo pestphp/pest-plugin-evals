@@ -17,8 +17,7 @@ final class ToolCallMatch implements Scorer
     public function __construct(
         private array $tools = [],
         private bool $strict = false,
-    ) {
-    }
+    ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {

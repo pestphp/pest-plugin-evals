@@ -7,11 +7,12 @@ namespace Pest\Evals\Tests;
 use Dotenv\Dotenv;
 use Laravel\Ai\AiServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
+use Override;
 use Pest\Evals\EvalServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
-    #[\Override]
+    #[Override]
     protected function setUp(): void
     {
         $this->loadPackageEnvironment();
@@ -22,7 +23,7 @@ abstract class TestCase extends BaseTestCase
     /**
      * @return array<int, class-string>
      */
-    #[\Override]
+    #[Override]
     protected function getPackageProviders($app): array
     {
         return [

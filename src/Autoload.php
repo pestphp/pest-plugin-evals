@@ -6,7 +6,6 @@ namespace Pest\Evals;
 
 use Closure;
 use Laravel\Ai\Contracts\Agent;
-use Pest\Expectation;
 use Pest\Evals\Eval\EvalExpectationContext;
 use Pest\Evals\Eval\EvalReport;
 use Pest\Evals\Scorers\AgentTrajectory;
@@ -17,6 +16,8 @@ use Pest\Evals\Scorers\Safety;
 use Pest\Evals\Scorers\Scorer;
 use Pest\Evals\Scorers\SemanticSimilarity;
 use Pest\Evals\Scorers\ToolCallMatch;
+use Pest\Expectation;
+use RuntimeException;
 
 /**
  * @param  list<string>  $fake
@@ -53,7 +54,7 @@ expect()->extend('repeat', function (int $count): Expectation {
     $ctx = EvalExpectationContext::$current;
 
     if (! $ctx instanceof EvalExpectationContext) {
-        throw new \RuntimeException('repeat() requires expectAgent() to be called first.');
+        throw new RuntimeException('repeat() requires expectAgent() to be called first.');
     }
 
     $additional = $ctx->resolveAdditionalOutputs($count - 1);
@@ -69,6 +70,7 @@ $hasSamples = fn (mixed $value): bool => is_string($value)
 
 /**
  * @internal
+ *
  * @return list<string>
  */
 function currentSamples(): array
@@ -84,28 +86,27 @@ function currentSamples(): array
 
 expect()->intercept('toContain', $hasSamples, function (string $needle): void {
     foreach (currentSamples() as $i => $output) {
-        \PHPUnit\Framework\Assert::assertStringContainsString($needle, $output, "Sample #".($i + 1)." does not contain '{$needle}'.");
+        \PHPUnit\Framework\Assert::assertStringContainsString($needle, $output, 'Sample #'.($i + 1)." does not contain '{$needle}'.");
     }
 });
 
 expect()->intercept('toMatch', $hasSamples, function (string $pattern): void {
     foreach (currentSamples() as $i => $output) {
-        \PHPUnit\Framework\Assert::assertMatchesRegularExpression($pattern, $output, "Sample #".($i + 1)." does not match '{$pattern}'.");
+        \PHPUnit\Framework\Assert::assertMatchesRegularExpression($pattern, $output, 'Sample #'.($i + 1)." does not match '{$pattern}'.");
     }
 });
 
 expect()->intercept('toBe', $hasSamples, function (mixed $expected): void {
     foreach (currentSamples() as $i => $output) {
-        \PHPUnit\Framework\Assert::assertSame($expected, $output, "Sample #".($i + 1)." does not match expected.");
+        \PHPUnit\Framework\Assert::assertSame($expected, $output, 'Sample #'.($i + 1).' does not match expected.');
     }
 });
 
 expect()->intercept('toBeJson', $hasSamples, function (): void {
     foreach (currentSamples() as $i => $output) {
-        \PHPUnit\Framework\Assert::assertJson($output, "Sample #".($i + 1)." is not valid JSON.");
+        \PHPUnit\Framework\Assert::assertJson($output, 'Sample #'.($i + 1).' is not valid JSON.');
     }
 });
-
 
 /**
  * @internal

@@ -16,8 +16,7 @@ final class AgentTrajectory implements Scorer
     public function __construct(
         private array $sequence = [],
         private bool $strictOrder = true,
-    ) {
-    }
+    ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {

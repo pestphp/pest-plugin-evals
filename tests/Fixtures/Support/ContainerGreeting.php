@@ -8,6 +8,5 @@ final readonly class ContainerGreeting
 {
     public function __construct(
         public string $prefix,
-    ) {
-    }
+    ) {}
 }

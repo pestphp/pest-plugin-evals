@@ -10,8 +10,7 @@ final readonly class ScorerResult
         public float $score,
         public string $reasoning,
         public string $scorer,
-    ) {
-    }
+    ) {}
 
     public function passed(float $threshold = 0.7): bool
     {

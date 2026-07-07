@@ -14,8 +14,7 @@ final class LlmJudge implements Scorer
         private string $criteria = '',
         private ?string $provider = null,
         private ?string $model = null,
-    ) {
-    }
+    ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {

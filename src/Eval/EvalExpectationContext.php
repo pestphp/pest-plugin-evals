@@ -7,6 +7,7 @@ namespace Pest\Evals\Eval;
 use Closure;
 use Illuminate\Container\Container;
 use Laravel\Ai\Contracts\Agent;
+use RuntimeException;
 
 final class EvalExpectationContext
 {
@@ -20,16 +21,6 @@ final class EvalExpectationContext
     /** @var list<string>|null */
     private ?array $sampleOutputs = null;
 
-    public static function currentPrompt(): string
-    {
-        return self::$current instanceof self ? self::$current->prompt : '';
-    }
-
-    public static function currentAgentName(): string
-    {
-        return self::$current instanceof self ? self::$current->agentName : 'Direct';
-    }
-
     /**
      * @param  list<string>  $fakedResponses
      * @param  list<mixed>  $attachments
@@ -39,7 +30,16 @@ final class EvalExpectationContext
         public readonly string $agentName,
         public readonly array $fakedResponses = [],
         public readonly array $attachments = [],
-    ) {
+    ) {}
+
+    public static function currentPrompt(): string
+    {
+        return self::$current instanceof self ? self::$current->prompt : '';
+    }
+
+    public static function currentAgentName(): string
+    {
+        return self::$current instanceof self ? self::$current->agentName : 'Direct';
     }
 
     /**
@@ -57,8 +57,8 @@ final class EvalExpectationContext
      */
     public function resolveAdditionalOutputs(int $count): array
     {
-        if (!$this->resolvedTask instanceof \Closure) {
-            throw new \RuntimeException('resolveOutputs() must be called before resolveAdditionalOutputs().');
+        if (! $this->resolvedTask instanceof Closure) {
+            throw new RuntimeException('resolveOutputs() must be called before resolveAdditionalOutputs().');
         }
 
         $task = $this->resolvedTask;
@@ -117,7 +117,10 @@ final class EvalExpectationContext
         $attachments = $this->attachments;
 
         return function (string $input) use ($agent, $attachments): string {
-            $instance = Container::getInstance()->make($agent);
+            $instance = match (true) {
+                class_exists(Container::class) => Container::getInstance()->make($agent),
+                default => new $agent(),
+            };
 
             return (string) $instance->prompt($input, $attachments); // @phpstan-ignore method.nonObject, cast.string
         };

@@ -22,7 +22,7 @@ describe('expectAgent with task closure', function (): void {
             fn (string $input): string => "The answer to '{$input}' is 42.",
             'What is the meaning of life?',
         )->toContain('42')
-         ->toContain('answer');
+            ->toContain('answer');
     });
 
     it('works with toMatch for regex', function (): void {

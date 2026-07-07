@@ -48,10 +48,10 @@ trait JudgesWithLlm
      */
     private function decodeJudgeResponse(string $response): ?array
     {
-        $cleaned = trim($response);
+        $cleaned = mb_trim($response);
         $cleaned = (string) preg_replace('/^```(?:json)?\s*/m', '', $cleaned);
         $cleaned = (string) preg_replace('/\s*```$/m', '', $cleaned);
-        $cleaned = trim($cleaned);
+        $cleaned = mb_trim($cleaned);
 
         /** @var array<string, mixed>|null $decoded */
         $decoded = json_decode($cleaned, true);

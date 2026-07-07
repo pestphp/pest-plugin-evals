@@ -40,12 +40,16 @@ final class EvalReport
 
     public function passedEvals(): int
     {
-        return collect($this->entries)->filter(fn (array $entry): bool => $entry['passed'])->count();
+        return count(array_filter($this->entries, fn (array $entry): bool => $entry['passed']));
     }
 
     public function avgScore(): float
     {
-        return collect($this->entries)->avg('score') ?? 0.0;
+        if ($this->entries === []) {
+            return 0.0;
+        }
+
+        return array_sum(array_column($this->entries, 'score')) / count($this->entries);
     }
 
     public function flushToFile(): void

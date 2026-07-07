@@ -4,17 +4,6 @@ declare(strict_types=1);
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | AI Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the providers and models powering your ai eval runs.
-    | The scoring section sets the LLM-as-judge provider and model that will
-    | grade agent responses, while embedding handles similarity scoring.
-    |
-    */
-
     'ai' => [
         'scoring' => [
             'provider' => env('EVAL_SCORING_PROVIDER', 'openai'),

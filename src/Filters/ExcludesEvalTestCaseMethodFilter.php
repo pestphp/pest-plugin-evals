@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Pest\Evals\Filters;
 
 use Pest\Contracts\TestCaseMethodFilter;
-use Pest\Factories\TestCaseMethodFactory;
 use Pest\Evals\Plugin;
+use Pest\Factories\TestCaseMethodFactory;
 
 /**
  * @internal

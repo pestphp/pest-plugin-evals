@@ -11,8 +11,7 @@ final readonly class SemanticSimilarity implements Scorer
     public function __construct(
         private ?string $provider = null,
         private ?string $model = null,
-    ) {
-    }
+    ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {

@@ -8,8 +8,7 @@ final readonly class ContainerResolvedPromptAgent
 {
     public function __construct(
         private ContainerGreeting $greeting,
-    ) {
-    }
+    ) {}
 
     public function prompt(string $input): string
     {

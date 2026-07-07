@@ -62,7 +62,7 @@ final class ToolCallMatch implements Scorer
     }
 
     /**
-     * @param  list<array{name: string, arguments: array<string, mixed>}>  $toolCalls
+     * @param  array<int, array{name: string, arguments: array<string, mixed>}>  $toolCalls
      * @param  array<string, mixed>|Closure  $expectedArgs
      */
     private function findMatchingCall(array $toolCalls, string $toolName, array|Closure $expectedArgs): bool

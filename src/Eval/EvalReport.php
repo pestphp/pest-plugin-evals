@@ -10,7 +10,7 @@ final class EvalReport
 
     private static ?self $instance = null;
 
-    /** @var list<array{agent: string, scorer: string, score: float, passed: bool}> */
+    /** @var array<int, array{agent: string, scorer: string, score: float, passed: bool}> */
     private array $entries = [];
 
     public static function instance(): self
@@ -74,7 +74,7 @@ final class EvalReport
             $decoded = json_decode((string) file_get_contents($file), true);
 
             if (is_array($decoded)) {
-                /** @var list<array{agent: string, scorer: string, score: float, passed: bool}> $decoded */
+                /** @var array<int, array{agent: string, scorer: string, score: float, passed: bool}> $decoded */
                 foreach ($decoded as $entry) {
                     $this->entries[] = $entry;
                 }

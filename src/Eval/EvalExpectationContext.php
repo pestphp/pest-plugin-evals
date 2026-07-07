@@ -7,7 +7,7 @@ namespace Pest\Evals\Eval;
 use Closure;
 use Illuminate\Container\Container;
 use Laravel\Ai\Contracts\Agent;
-use RuntimeException;
+use Pest\Evals\Exceptions\EvalExpectationException;
 
 final class EvalExpectationContext
 {
@@ -18,12 +18,12 @@ final class EvalExpectationContext
      */
     private ?Closure $resolvedTask = null;
 
-    /** @var list<string>|null */
+    /** @var array<int, string>|null */
     private ?array $sampleOutputs = null;
 
     /**
-     * @param  list<string>  $fakedResponses
-     * @param  list<mixed>  $attachments
+     * @param  array<int, string>  $fakedResponses
+     * @param  array<int, mixed>  $attachments
      */
     public function __construct(
         public readonly string $prompt,
@@ -43,7 +43,7 @@ final class EvalExpectationContext
     }
 
     /**
-     * @return list<string>
+     * @return array<int, string>
      */
     public function resolveOutputs(string|Closure|Agent $agent): array
     {
@@ -53,12 +53,12 @@ final class EvalExpectationContext
     }
 
     /**
-     * @return list<string>
+     * @return array<int, string>
      */
     public function resolveAdditionalOutputs(int $count): array
     {
         if (! $this->resolvedTask instanceof Closure) {
-            throw new RuntimeException('resolveOutputs() must be called before resolveAdditionalOutputs().');
+            throw EvalExpectationException::outputsNotResolved();
         }
 
         $task = $this->resolvedTask;
@@ -72,7 +72,7 @@ final class EvalExpectationContext
     }
 
     /**
-     * @param  list<string>  $outputs
+     * @param  array<int, string>  $outputs
      */
     public function setSampleOutputs(array $outputs): void
     {
@@ -80,7 +80,7 @@ final class EvalExpectationContext
     }
 
     /**
-     * @return list<string>|null
+     * @return array<int, string>|null
      */
     public function getSampleOutputs(): ?array
     {

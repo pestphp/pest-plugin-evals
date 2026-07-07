@@ -30,9 +30,9 @@ final readonly class SemanticSimilarity implements Scorer
         $response = Embeddings::for([$output, $expected])
             ->generate($provider, $model);
 
-        /** @var list<float> $outputEmbedding */
+        /** @var array<int, float> $outputEmbedding */
         $outputEmbedding = $response->embeddings[0];
-        /** @var list<float> $expectedEmbedding */
+        /** @var array<int, float> $expectedEmbedding */
         $expectedEmbedding = $response->embeddings[1];
 
         $similarity = $this->cosineSimilarity($outputEmbedding, $expectedEmbedding);
@@ -46,8 +46,8 @@ final readonly class SemanticSimilarity implements Scorer
     }
 
     /**
-     * @param  list<float>  $a
-     * @param  list<float>  $b
+     * @param  array<int, float>  $a
+     * @param  array<int, float>  $b
      */
     private function cosineSimilarity(array $a, array $b): float
     {

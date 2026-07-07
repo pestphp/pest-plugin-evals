@@ -11,7 +11,7 @@ final class AgentTrajectory implements Scorer
     use ParsesToolCalls;
 
     /**
-     * @param  list<string>  $sequence  Expected tool call sequence (in order)
+     * @param  array<int, string>  $sequence  Expected tool call sequence (in order)
      */
     public function __construct(
         private array $sequence = [],
@@ -46,7 +46,7 @@ final class AgentTrajectory implements Scorer
     }
 
     /**
-     * @param  list<string>  $toolCalls
+     * @param  array<int, string>  $toolCalls
      */
     private function scoreStrictOrder(array $toolCalls): ScorerResult
     {
@@ -74,7 +74,7 @@ final class AgentTrajectory implements Scorer
     }
 
     /**
-     * @param  list<string>  $toolCalls
+     * @param  array<int, string>  $toolCalls
      */
     private function scoreSubset(array $toolCalls): ScorerResult
     {

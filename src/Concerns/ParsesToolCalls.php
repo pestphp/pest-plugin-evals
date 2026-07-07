@@ -7,7 +7,7 @@ namespace Pest\Evals\Concerns;
 trait ParsesToolCalls
 {
     /**
-     * @return list<array{name: string, arguments: array<string, mixed>}>|null
+     * @return array<int, array{name: string, arguments: array<string, mixed>}>|null
      */
     private function parseToolCallsFromOutput(string $output): ?array
     {
@@ -19,7 +19,7 @@ trait ParsesToolCalls
 
     /**
      * @param  array<array-key, mixed>  $decoded
-     * @return list<array{name: string, arguments: array<string, mixed>}>|null
+     * @return array<int, array{name: string, arguments: array<string, mixed>}>|null
      */
     private function parseToolCallsFromDecoded(array $decoded): ?array
     {
@@ -46,7 +46,7 @@ trait ParsesToolCalls
 
     /**
      * @param  array<int|string, mixed>  $items
-     * @return list<array{name: string, arguments: array<string, mixed>}>
+     * @return array<int, array{name: string, arguments: array<string, mixed>}>
      */
     private function extractToolCalls(array $items): array
     {
@@ -75,7 +75,7 @@ trait ParsesToolCalls
     }
 
     /**
-     * @return list<string>|null
+     * @return array<int, string>|null
      */
     private function parseToolNamesFromOutput(string $output): ?array
     {

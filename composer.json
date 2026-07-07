@@ -1,6 +1,6 @@
 {
     "name": "pestphp/pest-plugin-evals",
-    "description": "A PestPHP plugin for evaluating Laravel AI SDK agents with LLM-as-judge, semantic similarity, and deterministic scorers",
+    "description": "A PestPHP plugin for evaluating LLM agents with LLM-as-judge, semantic similarity, and deterministic scorers",
     "keywords": [
         "php",
         "framework",

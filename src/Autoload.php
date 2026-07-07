@@ -8,6 +8,7 @@ use Closure;
 use Laravel\Ai\Contracts\Agent;
 use Pest\Evals\Eval\EvalExpectationContext;
 use Pest\Evals\Eval\EvalReport;
+use Pest\Evals\Exceptions\EvalExpectationException;
 use Pest\Evals\Scorers\AgentTrajectory;
 use Pest\Evals\Scorers\Factuality;
 use Pest\Evals\Scorers\LlmJudge;
@@ -17,23 +18,18 @@ use Pest\Evals\Scorers\Scorer;
 use Pest\Evals\Scorers\SemanticSimilarity;
 use Pest\Evals\Scorers\ToolCallMatch;
 use Pest\Expectation;
-use RuntimeException;
 
 /**
- * @param  list<string>  $fake
- * @param  list<mixed>  $attachments
+ * @param  array<int, string>  $fake
+ * @param  array<int, mixed>  $attachments
  */
-function expectAgent(
-    string|Closure|Agent $agent,
-    string $prompt,
-    array $fake = [],
-    array $attachments = [],
-): mixed {
-    $agentName = match (true) {
-        $agent instanceof Closure => 'Task',
-        $agent instanceof Agent => class_basename($agent),
-        default => class_basename($agent),
-    };
+expect()->extend('prompt', function (string $prompt, array $fake = [], array $attachments = []): Expectation {
+    /** @var Expectation<string|Closure|Agent> $this */
+    /** @var array<int, string> $fake */
+    /** @var array<int, mixed> $attachments */
+    $agent = $this->value;
+
+    $agentName = $agent instanceof Closure ? 'Task' : class_basename($agent);
 
     $ctx = new EvalExpectationContext(
         prompt: $prompt,
@@ -46,15 +42,17 @@ function expectAgent(
 
     $outputs = $ctx->resolveOutputs($agent);
 
-    return expect($outputs[0]);
-}
+    $this->value = $outputs[0];
+
+    return $this;
+});
 
 expect()->extend('repeat', function (int $count): Expectation {
     /** @var Expectation<string> $this */
     $ctx = EvalExpectationContext::$current;
 
     if (! $ctx instanceof EvalExpectationContext) {
-        throw new RuntimeException('repeat() requires expectAgent() to be called first.');
+        throw EvalExpectationException::missingPrompt();
     }
 
     $additional = $ctx->resolveAdditionalOutputs($count - 1);
@@ -71,7 +69,7 @@ $hasSamples = fn (mixed $value): bool => is_string($value)
 /**
  * @internal
  *
- * @return list<string>
+ * @return array<int, string>
  */
 function currentSamples(): array
 {
@@ -212,11 +210,11 @@ expect()->extend('toHaveToolCalls', function (array $expected, float $threshold 
 });
 
 /**
- * @param  list<string>  $steps
+ * @param  array<int, string>  $steps
  */
 expect()->extend('toFollowTrajectory', function (array $steps, float $threshold = 0.7, bool $strictOrder = true): Expectation {
     /** @var Expectation<string> $this */
-    /** @var list<string> $steps */
+    /** @var array<int, string> $steps */
     assertScorerResult(new AgentTrajectory(sequence: $steps, strictOrder: $strictOrder), $this->value, $threshold);
 
     return $this;

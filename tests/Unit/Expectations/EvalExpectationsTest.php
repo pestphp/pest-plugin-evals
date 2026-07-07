@@ -9,89 +9,73 @@ use Pest\Evals\Tests\Fixtures\Agents\InstanceGreetingAgent;
 use Pest\Evals\Tests\Fixtures\Support\ContainerGreeting;
 use Pest\Evals\Tests\Fixtures\Support\ContainerResolvedPromptAgent;
 
-use function Pest\Evals\expectAgent;
-
 beforeEach(function (): void {
     EvalReport::flush();
     EvalExpectationContext::$current = null;
 });
 
-describe('expectAgent with task closure', function (): void {
+describe('prompt with task closure', function (): void {
     it('returns output that works with native Pest expectations', function (): void {
-        expectAgent(
-            fn (string $input): string => "The answer to '{$input}' is 42.",
-            'What is the meaning of life?',
-        )->toContain('42')
+        expect(fn (string $input): string => "The answer to '{$input}' is 42.")
+            ->prompt('What is the meaning of life?')
+            ->toContain('42')
             ->toContain('answer');
     });
 
     it('works with toMatch for regex', function (): void {
-        expectAgent(
-            fn (string $input): string => 'Our refund policy allows returns within 30 days.',
-            'What is your return policy?',
-        )->toMatch('/\d+ days/');
+        expect(fn (string $input): string => 'Our refund policy allows returns within 30 days.')
+            ->prompt('What is your return policy?')
+            ->toMatch('/\d+ days/');
     });
 
     it('works with toBe for exact match', function (): void {
-        expectAgent(
-            fn (string $input): string => 'Paris',
-            'Capital of France?',
-        )->toBe('Paris');
+        expect(fn (string $input): string => 'Paris')
+            ->prompt('Capital of France?')
+            ->toBe('Paris');
     });
 
     it('works with toBeJson', function (): void {
-        expectAgent(
-            fn (string $input): string => '{"refund_window": 30, "currency": "USD"}',
-            'Return the policy as JSON',
-        )->toBeJson();
+        expect(fn (string $input): string => '{"refund_window": 30, "currency": "USD"}')
+            ->prompt('Return the policy as JSON')
+            ->toBeJson();
     });
 });
 
-describe('expectAgent with faked responses', function (): void {
+describe('prompt with faked responses', function (): void {
     it('uses faked response instead of real agent', function (): void {
-        expectAgent(
-            'FakeAgent',
-            'What is the capital of France?',
-            fake: ['Paris'],
-        )->toBe('Paris');
+        expect('FakeAgent')
+            ->prompt('What is the capital of France?', fake: ['Paris'])
+            ->toBe('Paris');
     });
 
     it('supports deterministic checks against faked output', function (): void {
-        expectAgent(
-            'FakeAgent',
-            'What is your refund policy?',
-            fake: ['We offer full refunds within 30 days of purchase.'],
-        )->toContain('30 days')
+        expect('FakeAgent')
+            ->prompt('What is your refund policy?', fake: ['We offer full refunds within 30 days of purchase.'])
+            ->toContain('30 days')
             ->toContain('refund')
             ->toMatch('/\d+ days/');
     });
 
     it('fails when faked response does not match', function (): void {
-        expect(fn () => expectAgent(
-            'FakeAgent',
-            'What is the capital of France?',
-            fake: ['I do not know'],
-        )->toBe('Paris'))->toThrow(PHPUnit\Framework\ExpectationFailedException::class);
+        expect(fn () => expect('FakeAgent')
+            ->prompt('What is the capital of France?', fake: ['I do not know'])
+            ->toBe('Paris'))->toThrow(PHPUnit\Framework\ExpectationFailedException::class);
     });
 });
 
 describe('samples', function (): void {
     it('asserts each sample independently', function (): void {
-        expectAgent(
-            'FakeAgent',
-            'What is the capital?',
-            fake: ['Paris', 'Paris', 'Paris'],
-        )->repeat(3)
+        expect('FakeAgent')
+            ->prompt('What is the capital?', fake: ['Paris', 'Paris', 'Paris'])
+            ->repeat(3)
             ->toContain('Paris');
     });
 
     it('fails if any sample does not meet assertion', function (): void {
         expect(function (): void {
-            expectAgent(
-                'FakeAgent',
-                'What is the capital?',
-                fake: ['Paris', 'wrong', 'Paris'],
-            )->repeat(3)
+            expect('FakeAgent')
+                ->prompt('What is the capital?', fake: ['Paris', 'wrong', 'Paris'])
+                ->repeat(3)
                 ->toContain('Paris');
         })->toThrow(PHPUnit\Framework\ExpectationFailedException::class);
     });
@@ -99,44 +83,37 @@ describe('samples', function (): void {
     it('runs the closure N times', function (): void {
         $callCount = 0;
 
-        expectAgent(
-            function (string $input) use (&$callCount): string {
-                $callCount++;
+        expect(function (string $input) use (&$callCount): string {
+            $callCount++;
 
-                return "response {$callCount}";
-            },
-            'test',
-        )->repeat(3)
+            return "response {$callCount}";
+        })
+            ->prompt('test')
+            ->repeat(3)
             ->toContain('response');
 
         expect($callCount)->toBe(3);
     });
 
     it('reuses last faked response when samples exceed fakes', function (): void {
-        expectAgent(
-            'FakeAgent',
-            'What is the capital?',
-            fake: ['Tokyo'],
-        )->repeat(3)
+        expect('FakeAgent')
+            ->prompt('What is the capital?', fake: ['Tokyo'])
+            ->repeat(3)
             ->toBe('Tokyo');
     });
 
     it('repeat is an alias for samples', function (): void {
-        expectAgent(
-            'FakeAgent',
-            'What is the capital?',
-            fake: ['Paris', 'Paris'],
-        )->repeat(2)
+        expect('FakeAgent')
+            ->prompt('What is the capital?', fake: ['Paris', 'Paris'])
+            ->repeat(2)
             ->toBe('Paris');
     });
 });
 
 describe('EvalExpectationContext', function (): void {
-    it('sets current context via expectAgent', function (): void {
-        expectAgent(
-            fn (string $input): string => 'output',
-            'test prompt',
-        );
+    it('sets current context via prompt', function (): void {
+        expect(fn (string $input): string => 'output')
+            ->prompt('test prompt');
 
         expect(EvalExpectationContext::$current)->not->toBeNull();
         expect(EvalExpectationContext::$current->prompt)->toBe('test prompt');
@@ -144,37 +121,36 @@ describe('EvalExpectationContext', function (): void {
     });
 
     it('sets agent name from class basename', function (): void {
-        expectAgent(
-            'App\Agents\MyCustomAgent',
-            'test prompt',
-            fake: ['output'],
-        );
+        expect('App\Agents\MyCustomAgent')
+            ->prompt('test prompt', fake: ['output']);
 
         expect(EvalExpectationContext::$current->agentName)->toBe('MyCustomAgent');
     });
 });
 
-describe('expectAgent with container resolution', function (): void {
+describe('prompt with container resolution', function (): void {
     it('resolves agent from container and runs it', function (): void {
         Container::getInstance()->bind(ContainerGreeting::class, fn (): ContainerGreeting => new ContainerGreeting('Hello'));
 
-        expectAgent(ContainerResolvedPromptAgent::class, 'World')
+        expect(ContainerResolvedPromptAgent::class)
+            ->prompt('World')
             ->toBe('Hello World');
     });
 });
 
-describe('expectAgent with agent instance', function (): void {
+describe('prompt with agent instance', function (): void {
     it('runs an agent instance directly without container resolution', function (): void {
         $agent = new InstanceGreetingAgent(new ContainerGreeting('Hello'));
 
-        expectAgent($agent, 'World')
+        expect($agent)
+            ->prompt('World')
             ->toBe('Hello World');
     });
 
     it('sets agent name from instance class basename', function (): void {
         $agent = new InstanceGreetingAgent(new ContainerGreeting('Hi'));
 
-        expectAgent($agent, 'there');
+        expect($agent)->prompt('there');
 
         expect(EvalExpectationContext::$current->agentName)->toBe('InstanceGreetingAgent');
     });
@@ -182,33 +158,31 @@ describe('expectAgent with agent instance', function (): void {
     it('uses faked responses over agent instance when fake is provided', function (): void {
         $agent = new InstanceGreetingAgent(new ContainerGreeting('Hello'));
 
-        expectAgent($agent, 'World', fake: ['faked response'])
+        expect($agent)
+            ->prompt('World', fake: ['faked response'])
             ->toBe('faked response');
     });
 });
 
 describe('EvalExpectationContext resolveOutputs', function (): void {
     it('returns single output by default', function (): void {
-        expectAgent(
-            fn (string $input): string => 'single output',
-            'test',
-        )->toBe('single output');
+        expect(fn (string $input): string => 'single output')
+            ->prompt('test')
+            ->toBe('single output');
     });
 
     it('passes prompt to task closure', function (): void {
-        expectAgent(
-            fn (string $input): string => "received: {$input}",
-            'hello world',
-        )->toContain('hello world');
+        expect(fn (string $input): string => "received: {$input}")
+            ->prompt('hello world')
+            ->toContain('hello world');
     });
 });
 
 describe('EvalReport integration', function (): void {
     it('has no entries when only native Pest expectations used', function (): void {
-        expectAgent(
-            fn (string $input): string => 'hello',
-            'test',
-        )->toContain('hello');
+        expect(fn (string $input): string => 'hello')
+            ->prompt('test')
+            ->toContain('hello');
 
         expect(EvalReport::instance()->totalEvals())->toBe(0);
     });

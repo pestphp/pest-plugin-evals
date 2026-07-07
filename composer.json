@@ -22,16 +22,16 @@
         }
     ],
     "require": {
-        "php": "^8.3",
-        "illuminate/console": "^12.0|^13.0",
-        "illuminate/support": "^12.0|^13.0",
-        "laravel/ai": "^0.1|^0.2|^0.3|^0.4|^0.5|^0.6|^0.7",
-        "pestphp/pest": "^4.4.1",
-        "pestphp/pest-plugin": "^4.0.0"
+        "php": "^8.5",
+        "illuminate/console": "^13.0",
+        "illuminate/support": "^13.0",
+        "laravel/ai": "^0.7.2",
+        "pestphp/pest": "^5.0.0",
+        "pestphp/pest-plugin": "^5.0.0"
     },
     "require-dev": {
-        "laravel/framework": "^12.0",
-        "orchestra/testbench": "^10.0",
+        "laravel/framework": "^13.0.0",
+        "orchestra/testbench": "^11.1.0",
         "pestphp/pest-dev-tools": "^4.1.0"
     },
     "autoload": {

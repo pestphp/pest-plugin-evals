@@ -13,8 +13,8 @@ trait JudgesWithLlm
 {
     private function judge(string $prompt, string $instructions): string
     {
-        $provider = $this->provider ?? Configuration::resolvedScoringProvider();
-        $model = $this->model ?? Configuration::resolvedScoringModel();
+        $provider = Configuration::resolvedScoringProvider();
+        $model = Configuration::resolvedScoringModel();
 
         $response = agent(
             instructions: $instructions,

@@ -9,11 +9,6 @@ use Pest\Evals\Configuration;
 
 final readonly class SemanticSimilarity implements Scorer
 {
-    public function __construct(
-        private ?string $provider = null,
-        private ?string $model = null,
-    ) {}
-
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {
         if ($expected === null) {
@@ -24,8 +19,8 @@ final readonly class SemanticSimilarity implements Scorer
             );
         }
 
-        $provider = $this->provider ?? Configuration::resolvedEmbeddingProvider();
-        $model = $this->model ?? Configuration::resolvedEmbeddingModel();
+        $provider = Configuration::resolvedEmbeddingProvider();
+        $model = Configuration::resolvedEmbeddingModel();
 
         $response = Embeddings::for([$output, $expected])
             ->generate($provider, $model);

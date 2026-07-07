@@ -1,0 +1,20 @@
+<?php
+
+use App\Agents\{{ name }};
+use function Pest\Evals\expectAgent;
+
+describe('{{ name }}', function () {
+    it('responds accurately to user queries', function () {
+        expectAgent({{ name }}::class, 'Your test prompt here')
+            ->toContain('expected term')
+            ->toPassJudge('Response is accurate, helpful, and professional', threshold: 0.8);
+    });
+
+    it('handles edge cases gracefully', function (string $prompt, string $criteria) {
+        expectAgent({{ name }}::class, $prompt)
+            ->toPassJudge($criteria);
+    })->with([
+        ['edge case prompt 1', 'Expected behavior criteria 1'],
+        ['edge case prompt 2', 'Expected behavior criteria 2'],
+    ]);
+})->group('eval');

@@ -1,6 +1,6 @@
 {
-    "name": "pestphp/pest-plugin-template",
-    "description": "My awesome plugin",
+    "name": "pestphp/pest-plugin-evals",
+    "description": "A PestPHP plugin for evaluating Laravel AI SDK agents with LLM-as-judge, semantic similarity, and deterministic scorers",
     "keywords": [
         "php",
         "framework",
@@ -8,24 +8,56 @@
         "unit",
         "test",
         "testing",
-        "plugin"
+        "plugin",
+        "eval",
+        "ai",
+        "llm",
+        "laravel"
     ],
     "license": "MIT",
+    "authors": [
+        {
+            "name": "Pushpak Chhajed",
+            "email": "pushpak1300@gmail.com"
+        }
+    ],
     "require": {
-        "php": "^8.4",
-        "pestphp/pest": "^5.0.0",
-        "pestphp/pest-plugin": "^5.0.0"
+        "php": "^8.3",
+        "illuminate/console": "^12.0|^13.0",
+        "illuminate/support": "^12.0|^13.0",
+        "laravel/ai": "^0.1|^0.2|^0.3|^0.4|^0.5|^0.6|^0.7",
+        "pestphp/pest": "^4.4.1",
+        "pestphp/pest-plugin": "^4.0.0"
+    },
+    "require-dev": {
+        "laravel/framework": "^12.0",
+        "orchestra/testbench": "^10.0",
+        "pestphp/pest-dev-tools": "^4.1.0"
     },
     "autoload": {
         "psr-4": {
-            "Pest\\PluginName\\": "src/"
+            "Pest\\Evals\\": "src/"
         },
         "files": [
             "src/Autoload.php"
         ]
     },
-    "require-dev": {
-        "pestphp/pest-dev-tools": "^5.0.0"
+    "autoload-dev": {
+        "psr-4": {
+            "Pest\\Evals\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "pest": {
+            "plugins": [
+                "Pest\\Evals\\Plugin"
+            ]
+        },
+        "laravel": {
+            "providers": [
+                "Pest\\Evals\\EvalServiceProvider"
+            ]
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -37,14 +69,14 @@
         }
     },
     "scripts": {
-        "refacto": "rector",
+        "refactor": "rector",
         "lint": "pint",
-        "test:refacto": "rector --dry-run",
+        "test:refactor": "rector --dry-run",
         "test:lint": "pint --test",
         "test:types": "phpstan analyse --ansi",
         "test:unit": "pest --colors=always",
         "test": [
-            "@test:refacto",
+            "@test:refactor",
             "@test:lint",
             "@test:types",
             "@test:unit"

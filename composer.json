@@ -26,7 +26,7 @@
         }
     ],
     "require": {
-        "php": "^8.5",
+        "php": "^8.4",
         "illuminate/support": "^13.0",
         "laravel/ai": "^0.8.1",
         "pestphp/pest": "^5.0.0",
@@ -54,11 +54,6 @@
         "pest": {
             "plugins": [
                 "Pest\\Evals\\Plugin"
-            ]
-        },
-        "laravel": {
-            "providers": [
-                "Pest\\Evals\\EvalServiceProvider"
             ]
         }
     },

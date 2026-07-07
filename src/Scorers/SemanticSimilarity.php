@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Evals\Scorers;
 
 use Laravel\Ai\Embeddings;
+use Pest\Evals\Configuration;
 
 final readonly class SemanticSimilarity implements Scorer
 {
@@ -23,10 +24,8 @@ final readonly class SemanticSimilarity implements Scorer
             );
         }
 
-        /** @var string $provider */
-        $provider = $this->provider ?? config('eval.ai.embedding.provider', 'openai');
-        /** @var string $model */
-        $model = $this->model ?? config('eval.ai.embedding.model', 'text-embedding-3-small');
+        $provider = $this->provider ?? Configuration::resolvedEmbeddingProvider();
+        $model = $this->model ?? Configuration::resolvedEmbeddingModel();
 
         $response = Embeddings::for([$output, $expected])
             ->generate($provider, $model);

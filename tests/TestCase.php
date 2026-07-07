@@ -8,7 +8,6 @@ use Dotenv\Dotenv;
 use Laravel\Ai\AiServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 use Override;
-use Pest\Evals\EvalServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -28,7 +27,6 @@ abstract class TestCase extends BaseTestCase
     {
         return [
             AiServiceProvider::class,
-            EvalServiceProvider::class,
         ];
     }
 

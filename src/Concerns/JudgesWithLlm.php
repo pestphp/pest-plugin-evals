@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Concerns;
 
+use Pest\Evals\Configuration;
 use Pest\Evals\Scorers\ScorerResult;
 
 use function Laravel\Ai\agent;
@@ -12,10 +13,8 @@ trait JudgesWithLlm
 {
     private function judge(string $prompt, string $instructions): string
     {
-        /** @var string $provider */
-        $provider = $this->provider ?? config('eval.ai.scoring.provider', 'openai');
-        /** @var string $model */
-        $model = $this->model ?? config('eval.ai.scoring.model', 'gpt-4.1-mini');
+        $provider = $this->provider ?? Configuration::resolvedScoringProvider();
+        $model = $this->model ?? Configuration::resolvedScoringModel();
 
         $response = agent(
             instructions: $instructions,

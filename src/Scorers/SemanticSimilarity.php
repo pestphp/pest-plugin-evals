@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Scorers;
 
-use Laravel\Ai\Embeddings;
 use Pest\Evals\Configuration;
 
+/**
+ * @internal
+ */
 final readonly class SemanticSimilarity implements Scorer
 {
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
@@ -19,16 +21,12 @@ final readonly class SemanticSimilarity implements Scorer
             );
         }
 
-        $provider = Configuration::resolvedEmbeddingProvider();
-        $model = Configuration::resolvedEmbeddingModel();
-
-        $response = Embeddings::for([$output, $expected])
-            ->generate($provider, $model);
+        $embeddings = Configuration::resolvedEmbeddings()->embed([$output, $expected]);
 
         /** @var array<int, float> $outputEmbedding */
-        $outputEmbedding = $response->embeddings[0];
+        $outputEmbedding = $embeddings[0];
         /** @var array<int, float> $expectedEmbedding */
-        $expectedEmbedding = $response->embeddings[1];
+        $expectedEmbedding = $embeddings[1];
 
         $similarity = $this->cosineSimilarity($outputEmbedding, $expectedEmbedding);
         $score = max(0.0, min(1.0, $similarity));

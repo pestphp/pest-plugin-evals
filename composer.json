@@ -11,8 +11,7 @@
         "plugin",
         "eval",
         "ai",
-        "llm",
-        "laravel"
+        "llm"
     ],
     "license": "MIT",
     "authors": [
@@ -27,14 +26,17 @@
     ],
     "require": {
         "php": "^8.4",
-        "laravel/ai": "^0.8.1",
         "pestphp/pest": "^5.0.0",
         "pestphp/pest-plugin": "^5.0.0"
     },
     "require-dev": {
+        "laravel/ai": "^0.8.1",
         "laravel/framework": "^13.19.0",
         "orchestra/testbench": "^11.1.0",
         "pestphp/pest-dev-tools": "^5.0.0"
+    },
+    "conflict": {
+        "laravel/ai": "<0.8.1 || >=0.9.0"
     },
     "autoload": {
         "psr-4": {
@@ -66,14 +68,17 @@
         }
     },
     "scripts": {
-        "refactor": "rector",
-        "lint": "pint",
-        "test:refactor": "rector --dry-run",
-        "test:lint": "pint --test",
+        "lint": [
+            "rector",
+            "pint"
+        ],
+        "test:lint": [
+            "rector --dry-run",
+            "pint --test"
+        ],
         "test:types": "phpstan analyse --ansi",
         "test:unit": "pest --colors=always",
         "test": [
-            "@test:refactor",
             "@test:lint",
             "@test:types",
             "@test:unit"

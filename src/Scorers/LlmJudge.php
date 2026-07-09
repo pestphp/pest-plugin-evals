@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Scorers;
 
-use Pest\Evals\Concerns\JudgesWithLlm;
+use Pest\Evals\Support\Judge;
 
+/**
+ * @internal
+ */
 final class LlmJudge implements Scorer
 {
-    use JudgesWithLlm;
-
     public function __construct(
-        private string $criteria = '',
+        private readonly string $criteria = '',
     ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
@@ -24,13 +25,10 @@ final class LlmJudge implements Scorer
             );
         }
 
-        $prompt = $this->buildPrompt($input, $output, $expected);
-        $response = $this->judge(
-            $prompt,
-            'You are an expert AI evaluation judge. You evaluate AI agent responses against specific criteria. Always respond with valid JSON only.',
-        );
-
-        return $this->parseJudgeResponse($response);
+        return Judge::using(self::class)
+            ->instructions('You are an expert AI evaluation judge. You evaluate AI agent responses against specific criteria. Always respond with valid JSON only.')
+            ->prompt($this->buildPrompt($input, $output, $expected))
+            ->result();
     }
 
     private function buildPrompt(string $input, string $output, ?string $expected): string

@@ -6,6 +6,9 @@ namespace Pest\Evals\Scorers;
 
 use Pest\Evals\Concerns\ParsesToolCalls;
 
+/**
+ * @internal
+ */
 final class AgentTrajectory implements Scorer
 {
     use ParsesToolCalls;

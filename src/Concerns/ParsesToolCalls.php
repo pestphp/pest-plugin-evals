@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Concerns;
 
+/**
+ * @internal
+ */
 trait ParsesToolCalls
 {
     /**

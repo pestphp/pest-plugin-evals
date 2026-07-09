@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Scorers;
 
-use Pest\Evals\Concerns\JudgesWithLlm;
+use Pest\Evals\Support\Judge;
 
+/**
+ * @internal
+ */
 final class Factuality implements Scorer
 {
-    use JudgesWithLlm;
-
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {
         if ($expected === null) {
@@ -20,29 +21,19 @@ final class Factuality implements Scorer
             );
         }
 
-        $prompt = $this->buildPrompt($input, $output, $expected);
-        $response = $this->judge(
-            $prompt,
-            'You are an expert factuality evaluator. Compare AI outputs against reference answers for factual consistency. Always respond with valid JSON only.',
-        );
+        $response = Judge::using(self::class)
+            ->instructions('You are an expert factuality evaluator. Compare AI outputs against reference answers for factual consistency. Always respond with valid JSON only.')
+            ->prompt($this->buildPrompt($input, $output, $expected));
 
-        $result = $this->decodeJudgeResponse($response);
-
-        if ($result === null) {
-            return new ScorerResult(
-                score: 0.0,
-                reasoning: "Failed to parse factuality response: {$response}",
-                scorer: self::class,
-            );
+        if ($response->failed()) {
+            return $response->result('factuality');
         }
 
-        $category = isset($result['raw']['category']) && is_string($result['raw']['category'])
-            ? $result['raw']['category']
-            : 'unknown';
+        $category = $response->string('category', 'unknown');
 
         return new ScorerResult(
-            score: $result['score'],
-            reasoning: "[{$category}] {$result['reasoning']}",
+            score: $response->score(),
+            reasoning: "[{$category}] {$response->reasoning()}",
             scorer: self::class,
         );
     }

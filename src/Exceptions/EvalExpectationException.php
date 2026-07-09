@@ -6,6 +6,9 @@ namespace Pest\Evals\Exceptions;
 
 use RuntimeException;
 
+/**
+ * @internal
+ */
 final class EvalExpectationException extends RuntimeException
 {
     public static function missingPrompt(): self

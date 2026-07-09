@@ -7,6 +7,9 @@ namespace Pest\Evals\Scorers;
 use Closure;
 use Pest\Evals\Concerns\ParsesToolCalls;
 
+/**
+ * @internal
+ */
 final class ToolCallMatch implements Scorer
 {
     use ParsesToolCalls;

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Eval;
 
+/**
+ * @internal
+ */
 final class EvalReport
 {
     private const string TEMP_FILE_PREFIX = 'pest_eval_';

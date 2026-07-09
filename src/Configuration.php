@@ -4,71 +4,46 @@ declare(strict_types=1);
 
 namespace Pest\Evals;
 
-/**
- * @internal
- */
+use Closure;
+use Pest\Evals\Contracts\EmbeddingsDriver;
+use Pest\Evals\Contracts\JudgeDriver;
+use Pest\Evals\Drivers\ClosureEmbeddings;
+use Pest\Evals\Drivers\ClosureJudge;
+use Pest\Evals\Drivers\LaravelAiEmbeddings;
+use Pest\Evals\Drivers\LaravelAiJudge;
+
 final class Configuration
 {
-    private static ?string $scoringProvider = null;
+    private static ?JudgeDriver $judge = null;
 
-    private static ?string $scoringModel = null;
+    private static ?EmbeddingsDriver $embeddings = null;
 
-    private static ?string $embeddingProvider = null;
-
-    private static ?string $embeddingModel = null;
-
-    public static function resolvedScoringProvider(): string
+    public static function resolvedJudge(): JudgeDriver
     {
-        return self::$scoringProvider ?? (getenv('EVAL_SCORING_PROVIDER') ?: 'openai');
+        return self::$judge ?? new LaravelAiJudge();
     }
 
-    public static function resolvedScoringModel(): string
+    public static function resolvedEmbeddings(): EmbeddingsDriver
     {
-        return self::$scoringModel ?? (getenv('EVAL_SCORING_MODEL') ?: 'gpt-5.4-nano');
-    }
-
-    public static function resolvedEmbeddingProvider(): string
-    {
-        return self::$embeddingProvider ?? (getenv('EVAL_EMBEDDING_PROVIDER') ?: 'openai');
-    }
-
-    public static function resolvedEmbeddingModel(): string
-    {
-        return self::$embeddingModel ?? (getenv('EVAL_EMBEDDING_MODEL') ?: 'text-embedding-3-small');
+        return self::$embeddings ?? new LaravelAiEmbeddings();
     }
 
     public static function flush(): void
     {
-        self::$scoringProvider = null;
-        self::$scoringModel = null;
-        self::$embeddingProvider = null;
-        self::$embeddingModel = null;
+        self::$judge = null;
+        self::$embeddings = null;
     }
 
-    public function scoringProvider(string $provider): self
+    public function judgeUsing(JudgeDriver|Closure $judge): self
     {
-        self::$scoringProvider = $provider;
+        self::$judge = $judge instanceof Closure ? new ClosureJudge($judge) : $judge;
 
         return $this;
     }
 
-    public function scoringModel(string $model): self
+    public function embeddingsUsing(EmbeddingsDriver|Closure $embeddings): self
     {
-        self::$scoringModel = $model;
-
-        return $this;
-    }
-
-    public function embeddingProvider(string $provider): self
-    {
-        self::$embeddingProvider = $provider;
-
-        return $this;
-    }
-
-    public function embeddingModel(string $model): self
-    {
-        self::$embeddingModel = $model;
+        self::$embeddings = $embeddings instanceof Closure ? new ClosureEmbeddings($embeddings) : $embeddings;
 
         return $this;
     }

@@ -9,6 +9,9 @@ use Illuminate\Container\Container;
 use Laravel\Ai\Contracts\Agent;
 use Pest\Evals\Exceptions\EvalExpectationException;
 
+/**
+ * @internal
+ */
 final class EvalExpectationContext
 {
     public static ?self $current = null;

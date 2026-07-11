@@ -2,32 +2,57 @@
 
 declare(strict_types=1);
 
-namespace Pest\Evals\Concerns;
+namespace Pest\Evals\Support;
 
 /**
  * @internal
  */
-trait ParsesToolCalls
+final class ToolCallParser
 {
     /**
      * @return array<int, array{name: string, arguments: array<string, mixed>}>|null
      */
-    private function parseToolCallsFromOutput(string $output): ?array
+    public static function fromOutput(string $output): ?array
     {
         /** @var mixed $decoded */
         $decoded = json_decode($output, true);
 
-        return is_array($decoded) ? $this->parseToolCallsFromDecoded($decoded) : null;
+        return is_array($decoded) ? self::fromDecoded($decoded) : null;
+    }
+
+    /**
+     * @return array<int, string>|null
+     */
+    public static function namesFromOutput(string $output): ?array
+    {
+        /** @var mixed $decoded */
+        $decoded = json_decode($output, true);
+
+        if (! is_array($decoded)) {
+            return null;
+        }
+
+        if (isset($decoded[0]) && is_string($decoded[0])) {
+            return array_values(array_filter($decoded, is_string(...)));
+        }
+
+        $toolCalls = self::fromDecoded($decoded);
+
+        if ($toolCalls === null) {
+            return null;
+        }
+
+        return array_map(fn (array $call): string => $call['name'], $toolCalls);
     }
 
     /**
      * @param  array<array-key, mixed>  $decoded
      * @return array<int, array{name: string, arguments: array<string, mixed>}>|null
      */
-    private function parseToolCallsFromDecoded(array $decoded): ?array
+    private static function fromDecoded(array $decoded): ?array
     {
         if (isset($decoded[0]) && is_array($decoded[0]) && isset($decoded[0]['name'])) {
-            return $this->extractToolCalls($decoded);
+            return self::extract($decoded);
         }
 
         if (isset($decoded['name']) && is_string($decoded['name'])) {
@@ -41,7 +66,7 @@ trait ParsesToolCalls
         }
 
         if (isset($decoded['tool_calls']) && is_array($decoded['tool_calls'])) {
-            return $this->extractToolCalls($decoded['tool_calls']);
+            return self::extract($decoded['tool_calls']);
         }
 
         return null;
@@ -51,7 +76,7 @@ trait ParsesToolCalls
      * @param  array<int|string, mixed>  $items
      * @return array<int, array{name: string, arguments: array<string, mixed>}>
      */
-    private function extractToolCalls(array $items): array
+    private static function extract(array $items): array
     {
         $result = [];
 
@@ -75,30 +100,5 @@ trait ParsesToolCalls
         }
 
         return $result;
-    }
-
-    /**
-     * @return array<int, string>|null
-     */
-    private function parseToolNamesFromOutput(string $output): ?array
-    {
-        /** @var mixed $decoded */
-        $decoded = json_decode($output, true);
-
-        if (! is_array($decoded)) {
-            return null;
-        }
-
-        if (isset($decoded[0]) && is_string($decoded[0])) {
-            return array_values(array_filter($decoded, is_string(...)));
-        }
-
-        $toolCalls = $this->parseToolCallsFromDecoded($decoded);
-
-        if ($toolCalls === null) {
-            return null;
-        }
-
-        return array_map(fn (array $call): string => $call['name'], $toolCalls);
     }
 }

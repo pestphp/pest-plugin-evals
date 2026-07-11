@@ -8,6 +8,8 @@ use Closure;
 use Illuminate\Container\Container;
 use Laravel\Ai\Contracts\Agent;
 use Pest\Evals\Exceptions\EvalExpectationException;
+use Pest\Expectation;
+use WeakMap;
 
 /**
  * @internal
@@ -15,6 +17,11 @@ use Pest\Evals\Exceptions\EvalExpectationException;
 final class EvalExpectationContext
 {
     public static ?self $current = null;
+
+    /**
+     * @var WeakMap<object, self>|null
+     */
+    private static ?WeakMap $contexts = null;
 
     /**
      * @var (Closure(string): string)|null
@@ -35,14 +42,33 @@ final class EvalExpectationContext
         public readonly array $attachments = [],
     ) {}
 
-    public static function currentPrompt(): string
+    /**
+     * @template TValue
+     *
+     * @param  Expectation<TValue>  $expectation
+     */
+    public static function bind(Expectation $expectation, self $context): void
     {
-        return self::$current instanceof self ? self::$current->prompt : '';
+        self::$contexts ??= new WeakMap;
+        self::$contexts[$expectation] = $context;
+
+        self::$current = $context;
     }
 
-    public static function currentAgentName(): string
+    /**
+     * @template TValue
+     *
+     * @param  Expectation<TValue>  $expectation
+     */
+    public static function for(Expectation $expectation): ?self
     {
-        return self::$current instanceof self ? self::$current->agentName : 'Direct';
+        return self::$contexts[$expectation] ?? null;
+    }
+
+    public static function reset(): void
+    {
+        self::$current = null;
+        self::$contexts = null;
     }
 
     /**
@@ -61,7 +87,7 @@ final class EvalExpectationContext
     public function resolveAdditionalOutputs(int $count): array
     {
         if (! $this->resolvedTask instanceof Closure) {
-            throw EvalExpectationException::outputsNotResolved();
+            throw EvalExpectationException::promptNotCalled();
         }
 
         $task = $this->resolvedTask;

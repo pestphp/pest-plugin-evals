@@ -4,21 +4,19 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Scorers;
 
-use Pest\Evals\Concerns\ParsesToolCalls;
+use Pest\Evals\Support\ToolCallParser;
 
 /**
  * @internal
  */
 final class AgentTrajectory implements Scorer
 {
-    use ParsesToolCalls;
-
     /**
      * @param  array<int, string>  $sequence  Expected tool call sequence (in order)
      */
     public function __construct(
         private array $sequence = [],
-        private bool $strictOrder = true,
+        private readonly bool $strictOrder = true,
     ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
@@ -31,7 +29,7 @@ final class AgentTrajectory implements Scorer
             );
         }
 
-        $toolCalls = $this->parseToolNamesFromOutput($output);
+        $toolCalls = ToolCallParser::namesFromOutput($output);
 
         if ($toolCalls === null) {
             return new ScorerResult(

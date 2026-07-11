@@ -9,14 +9,14 @@ beforeEach(function (): void {
     Plugin::resetEvalMode();
 });
 
-describe('Plugin --eval handling', function (): void {
+describe('Plugin --evals handling', function (): void {
     it('falls back to the eval group when tests/Evals is absent', function (): void {
         withTemporaryWorkingDirectory(function (): void {
             EvalReport::flush();
             $plugin = new Plugin();
 
-            expect($plugin->handleArguments(['vendor/bin/pest', '--eval']))
-                ->toBe(['vendor/bin/pest', '--group=eval']);
+            expect($plugin->handleArguments(['vendor/bin/pest', '--evals']))
+                ->toBe(['vendor/bin/pest', '--group=evals']);
             expect($plugin->addOutput(0))->toBe(0);
         });
     });
@@ -28,7 +28,7 @@ describe('Plugin --eval handling', function (): void {
             EvalReport::flush();
             $plugin = new Plugin();
 
-            expect($plugin->handleArguments(['vendor/bin/pest', '--eval']))
+            expect($plugin->handleArguments(['vendor/bin/pest', '--evals']))
                 ->toBe(['vendor/bin/pest', 'tests/Evals']);
             expect($plugin->addOutput(0))->toBe(0);
         });
@@ -41,23 +41,23 @@ describe('Plugin --eval handling', function (): void {
             EvalReport::flush();
             $plugin = new Plugin();
 
-            expect($plugin->handleArguments(['vendor/bin/pest', '--eval', 'tests/Feature/ExampleTest.php']))
-                ->toBe(['vendor/bin/pest', 'tests/Feature/ExampleTest.php', '--group=eval']);
+            expect($plugin->handleArguments(['vendor/bin/pest', '--evals', 'tests/Feature/ExampleTest.php']))
+                ->toBe(['vendor/bin/pest', 'tests/Feature/ExampleTest.php', '--group=evals']);
             expect($plugin->addOutput(0))->toBe(0);
         });
     });
 
-    it('sets eval mode when --eval is passed', function (): void {
+    it('sets eval mode when --evals is passed', function (): void {
         withTemporaryWorkingDirectory(function (): void {
             $plugin = new Plugin();
 
-            $plugin->handleArguments(['vendor/bin/pest', '--eval']);
+            $plugin->handleArguments(['vendor/bin/pest', '--evals']);
 
             expect(Plugin::isEvalMode())->toBeTrue();
         });
     });
 
-    it('does not set eval mode when --eval is not passed', function (): void {
+    it('does not set eval mode when --evals is not passed', function (): void {
         withTemporaryWorkingDirectory(function (): void {
             $plugin = new Plugin();
 
@@ -67,7 +67,7 @@ describe('Plugin --eval handling', function (): void {
         });
     });
 
-    it('passes arguments through unchanged when --eval is not present', function (): void {
+    it('passes arguments through unchanged when --evals is not present', function (): void {
         withTemporaryWorkingDirectory(function (): void {
             $plugin = new Plugin();
 

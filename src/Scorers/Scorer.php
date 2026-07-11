@@ -6,6 +6,8 @@ namespace Pest\Evals\Scorers;
 
 interface Scorer
 {
+    public const float DEFAULT_THRESHOLD = 0.7;
+
     /**
      * @return ScorerResult A result with a score between 0.0 and 1.0
      */

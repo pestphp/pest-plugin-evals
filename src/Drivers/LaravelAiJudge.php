@@ -9,6 +9,9 @@ use RuntimeException;
 
 use function Laravel\Ai\agent;
 
+/**
+ * @internal
+ */
 final class LaravelAiJudge implements JudgeDriver
 {
     public readonly string $provider;

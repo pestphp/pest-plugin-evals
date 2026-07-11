@@ -24,9 +24,9 @@ final class Plugin implements AddsOutput, Bootable, HandlesArguments, Terminable
 {
     use HandleArguments;
 
-    private const string ENV_EVAL_MODE = 'PEST_EVAL_MODE';
+    private const string ENV_EVAL_MODE = 'PEST_EVALS_MODE';
 
-    private const string ENV_VERBOSE = 'EVALS_VERBOSE';
+    private const string ENV_VERBOSE = 'PEST_EVALS_VERBOSE';
 
     private static bool $evalMode = false;
 
@@ -64,13 +64,13 @@ final class Plugin implements AddsOutput, Bootable, HandlesArguments, Terminable
             ->addTestCaseMethodFilter(new ExcludesEvalTestCaseMethodFilter());
 
         pest()->afterEach(function (): void {
-            EvalExpectationContext::$current = null;
+            EvalExpectationContext::reset();
         });
     }
 
     public function handleArguments(array $arguments): array
     {
-        if (! $this->hasArgument('--eval', $arguments)) {
+        if (! $this->hasArgument('--evals', $arguments)) {
             return $arguments;
         }
 
@@ -81,7 +81,7 @@ final class Plugin implements AddsOutput, Bootable, HandlesArguments, Terminable
 
         Parallel::setGlobal(self::ENV_EVAL_MODE, true);
 
-        $filtered = $this->popArgument('--eval', $arguments);
+        $filtered = $this->popArgument('--evals', $arguments);
 
         if ($this->hasArgument('--evals-verbose', $filtered)) {
             self::$verbose = true;
@@ -93,7 +93,7 @@ final class Plugin implements AddsOutput, Bootable, HandlesArguments, Terminable
         }
 
         if (! $this->hasArgument('--group', $filtered)) {
-            return $this->pushArgument('--group=eval', $filtered);
+            return $this->pushArgument('--group=evals', $filtered);
         }
 
         return $filtered;

@@ -16,8 +16,8 @@ final class EvalExpectationException extends RuntimeException
         return new self('[repeat()] requires [prompt()] to be called first.');
     }
 
-    public static function outputsNotResolved(): self
+    public static function promptNotCalled(): self
     {
-        return new self('[resolveOutputs()] must be called before [resolveAdditionalOutputs()].');
+        return new self('[prompt()] must be called before [repeat()].');
     }
 }

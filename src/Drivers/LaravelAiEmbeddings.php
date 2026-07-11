@@ -8,6 +8,9 @@ use Laravel\Ai\Embeddings;
 use Pest\Evals\Contracts\EmbeddingsDriver;
 use RuntimeException;
 
+/**
+ * @internal
+ */
 final class LaravelAiEmbeddings implements EmbeddingsDriver
 {
     public readonly string $provider;

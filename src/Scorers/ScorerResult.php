@@ -12,7 +12,7 @@ final readonly class ScorerResult
         public string $scorer,
     ) {}
 
-    public function passed(float $threshold = 0.7): bool
+    public function passed(float $threshold = Scorer::DEFAULT_THRESHOLD): bool
     {
         return $this->score >= $threshold;
     }

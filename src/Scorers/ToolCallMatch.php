@@ -5,21 +5,19 @@ declare(strict_types=1);
 namespace Pest\Evals\Scorers;
 
 use Closure;
-use Pest\Evals\Concerns\ParsesToolCalls;
+use Pest\Evals\Support\ToolCallParser;
 
 /**
  * @internal
  */
 final class ToolCallMatch implements Scorer
 {
-    use ParsesToolCalls;
-
     /**
      * @param  array<string, array<string, mixed>|Closure>  $tools  Expected tool calls: ['ToolName' => ['arg' => 'value'] | callable]
      */
     public function __construct(
-        private array $tools = [],
-        private bool $strict = false,
+        private readonly array $tools = [],
+        private readonly bool $strict = false,
     ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
@@ -32,7 +30,7 @@ final class ToolCallMatch implements Scorer
             );
         }
 
-        $toolCalls = $this->parseToolCallsFromOutput($output);
+        $toolCalls = ToolCallParser::fromOutput($output);
 
         if ($toolCalls === null) {
             return new ScorerResult(

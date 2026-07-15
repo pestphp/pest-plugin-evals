@@ -20,8 +20,8 @@ final class LaravelAiJudge implements JudgeDriver
 
     public function __construct(?string $provider = null, ?string $model = null)
     {
-        $this->provider = $provider ?? (getenv('EVAL_SCORING_PROVIDER') ?: 'openai');
-        $this->model = $model ?? (getenv('EVAL_SCORING_MODEL') ?: 'gpt-5.4-nano');
+        $this->provider = $provider ?? (getenv('PEST_EVALS_LARAVEL_SCORING_PROVIDER') ?: 'openai');
+        $this->model = $model ?? (getenv('PEST_EVALS_LARAVEL_SCORING_MODEL') ?: 'gpt-5.4-nano');
     }
 
     public function generate(string $instructions, string $prompt): string
@@ -30,7 +30,7 @@ final class LaravelAiJudge implements JudgeDriver
             throw new RuntimeException(
                 'The default judge driver requires the [laravel/ai] package. '
                 .'Install it with [composer require laravel/ai], or configure a '
-                .'custom driver via evals()->judgeUsing(...).'
+                .'custom driver via pest()->evals()->judgeUsing(...).'
             );
         }
 

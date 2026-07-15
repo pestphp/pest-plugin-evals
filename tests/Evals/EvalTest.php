@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
+use Pest\Evals\Plugin;
 use Pest\Evals\Tests\Fixtures\Agents\CapitalCityAgent;
 use Pest\Evals\Tests\Fixtures\Agents\GreetingAgent;
 use Pest\Evals\Tests\Fixtures\Agents\RefundPolicyAgent;
 use Pest\Evals\Tests\Fixtures\Agents\SentimentAgent;
 
 beforeEach(function (): void {
-    if (empty(env('OPENAI_API_KEY'))) {
+    if (Plugin::isEvalMode() && empty(env('OPENAI_API_KEY'))) {
         $this->markTestSkipped('OPENAI_API_KEY is not set.');
     }
 });

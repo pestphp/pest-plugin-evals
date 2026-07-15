@@ -28,6 +28,10 @@ final class Configuration
         return self::$embeddings ?? new LaravelAiEmbeddings();
     }
 
+    public static function usesDefaultDrivers(): bool
+    {
+    }
+
     public static function flush(): void
     {
         self::$judge = null;

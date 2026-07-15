@@ -32,13 +32,11 @@ final class EvalExpectationContext
     private ?array $sampleOutputs = null;
 
     /**
-     * @param  array<int, string>  $fakedResponses
      * @param  array<int, mixed>  $attachments
      */
     public function __construct(
         public readonly string $prompt,
         public readonly string $agentName,
-        public readonly array $fakedResponses = [],
         public readonly array $attachments = [],
     ) {}
 
@@ -123,18 +121,6 @@ final class EvalExpectationContext
     {
         if ($agent instanceof Closure) {
             return $agent;
-        }
-
-        if ($this->fakedResponses !== []) {
-            $responses = $this->fakedResponses;
-            $index = 0;
-
-            return function (string $input) use ($responses, &$index): string {
-                $response = $responses[$index] ?? $responses[array_key_last($responses)];
-                $index++;
-
-                return $response;
-            };
         }
 
         if ($agent instanceof Agent) {

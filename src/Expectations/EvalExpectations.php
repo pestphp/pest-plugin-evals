@@ -8,6 +8,7 @@ use Closure;
 use Laravel\Ai\Contracts\Agent;
 use Pest\Evals\Eval\EvalExpectationContext;
 use Pest\Evals\Exceptions\EvalExpectationException;
+use Pest\Evals\Plugin;
 use Pest\Evals\Scorers\AgentTrajectory;
 use Pest\Evals\Scorers\Factuality;
 use Pest\Evals\Scorers\LlmJudge;
@@ -32,18 +33,20 @@ final class EvalExpectations
 
     /**
      * @param  Expectation<string|Closure|Agent>  $expectation
-     * @param  array<int, string>  $fake
      * @param  array<int, mixed>  $attachments
      * @return Expectation<string|Closure|Agent>
      */
-    public function prompt(Expectation $expectation, string $prompt, array $fake = [], array $attachments = []): Expectation
+    public function prompt(Expectation $expectation, string $prompt, array $attachments = []): Expectation
     {
+        if (! Plugin::isEvalMode()) {
+            Assert::markTestSkipped('Eval skipped. Run with [--evals] to evaluate against a real model.');
+        }
+
         $agent = $expectation->value;
 
         $context = new EvalExpectationContext(
             prompt: $prompt,
             agentName: $agent instanceof Closure ? 'Task' : class_basename($agent),
-            fakedResponses: $fake,
             attachments: $attachments,
         );
 

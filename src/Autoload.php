@@ -11,13 +11,16 @@ use Pest\Evals\Scorers\Scorer;
 use Pest\Evals\Support\Samples;
 use Pest\Expectation;
 
+if (! function_exists('expect')) {
+    return;
+}
+
 $evals = new EvalExpectations;
 
-expect()->extend('prompt', function (string $prompt, array $fake = [], array $attachments = []) use ($evals): Expectation {
+expect()->extend('prompt', function (string $prompt, array $attachments = []) use ($evals): Expectation {
     /** @var Expectation<string|Closure|Agent> $this */
-    /** @var array<int, string> $fake */
     /** @var array<int, mixed> $attachments */
-    return $evals->prompt($this, $prompt, $fake, $attachments);
+    return $evals->prompt($this, $prompt, $attachments);
 });
 
 expect()->extend('repeat', function (int $count) use ($evals): Expectation {

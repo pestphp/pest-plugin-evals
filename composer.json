@@ -31,7 +31,7 @@
     },
     "require-dev": {
         "laravel/ai": "^0.8.1",
-        "laravel/framework": "^13.19.0",
+        "laravel/framework": "^13.20.0",
         "orchestra/testbench": "^11.1.0",
         "pestphp/pest-dev-tools": "^5.0.0"
     },

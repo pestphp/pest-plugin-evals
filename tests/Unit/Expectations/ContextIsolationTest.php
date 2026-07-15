@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 use Pest\Evals\Configuration;
 use Pest\Evals\Eval\EvalExpectationContext;
-use Pest\Evals\Eval\EvalReport;
+use Pest\Evals\Plugin;
 
 beforeEach(function (): void {
-    EvalReport::flush();
     EvalExpectationContext::reset();
     Configuration::flush();
+    Plugin::resetEvalMode();
+    $_SERVER['PEST_EVALS'] = '1';
 });
 
 afterEach(function (): void {
     Configuration::flush();
+    Plugin::resetEvalMode();
 });
 
 describe('context isolation between interleaved prompt expectations', function (): void {
@@ -58,12 +60,12 @@ describe('context isolation between interleaved prompt expectations', function (
             return '{"score": 1.0, "reasoning": "looks great"}';
         });
 
-        $foo = expect('AlphaAgent')
-            ->prompt('QUESTION_ALPHA', fake: ['ALPHA_OUTPUT'])
+        $foo = expect(fn (string $input): string => 'ALPHA_OUTPUT')
+            ->prompt('QUESTION_ALPHA')
             ->repeat(2);
 
-        $bar = expect('BetaAgent')
-            ->prompt('QUESTION_BETA', fake: ['BETA_OUTPUT'])
+        $bar = expect(fn (string $input): string => 'BETA_OUTPUT')
+            ->prompt('QUESTION_BETA')
             ->repeat(2);
 
         $foo->toBeRelevant();

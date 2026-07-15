@@ -6,10 +6,10 @@ use Pest\Evals\Drivers\LaravelAiEmbeddings;
 use Pest\Evals\Drivers\LaravelAiJudge;
 
 afterEach(function (): void {
-    putenv('EVAL_SCORING_PROVIDER');
-    putenv('EVAL_SCORING_MODEL');
-    putenv('EVAL_EMBEDDING_PROVIDER');
-    putenv('EVAL_EMBEDDING_MODEL');
+    putenv('PEST_EVALS_LARAVEL_SCORING_PROVIDER');
+    putenv('PEST_EVALS_LARAVEL_SCORING_MODEL');
+    putenv('PEST_EVALS_LARAVEL_EMBEDDING_PROVIDER');
+    putenv('PEST_EVALS_LARAVEL_EMBEDDING_MODEL');
 });
 
 describe('LaravelAiJudge', function (): void {
@@ -28,8 +28,8 @@ describe('LaravelAiJudge', function (): void {
     });
 
     it('falls back to environment variables', function (): void {
-        putenv('EVAL_SCORING_PROVIDER=azure');
-        putenv('EVAL_SCORING_MODEL=gpt-env');
+        putenv('PEST_EVALS_LARAVEL_SCORING_PROVIDER=azure');
+        putenv('PEST_EVALS_LARAVEL_SCORING_MODEL=gpt-env');
 
         $judge = new LaravelAiJudge();
 
@@ -38,7 +38,7 @@ describe('LaravelAiJudge', function (): void {
     });
 
     it('prefers an explicit value over an env var', function (): void {
-        putenv('EVAL_SCORING_MODEL=gpt-env');
+        putenv('PEST_EVALS_LARAVEL_SCORING_MODEL=gpt-env');
 
         expect(new LaravelAiJudge(model: 'gpt-explicit')->model)->toBe('gpt-explicit');
     });
@@ -60,8 +60,8 @@ describe('LaravelAiEmbeddings', function (): void {
     });
 
     it('falls back to environment variables', function (): void {
-        putenv('EVAL_EMBEDDING_PROVIDER=cohere');
-        putenv('EVAL_EMBEDDING_MODEL=embed-env');
+        putenv('PEST_EVALS_LARAVEL_EMBEDDING_PROVIDER=cohere');
+        putenv('PEST_EVALS_LARAVEL_EMBEDDING_MODEL=embed-env');
 
         $embeddings = new LaravelAiEmbeddings();
 

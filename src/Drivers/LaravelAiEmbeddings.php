@@ -19,8 +19,8 @@ final class LaravelAiEmbeddings implements EmbeddingsDriver
 
     public function __construct(?string $provider = null, ?string $model = null)
     {
-        $this->provider = $provider ?? (getenv('EVAL_EMBEDDING_PROVIDER') ?: 'openai');
-        $this->model = $model ?? (getenv('EVAL_EMBEDDING_MODEL') ?: 'text-embedding-3-small');
+        $this->provider = $provider ?? (getenv('PEST_EVALS_LARAVEL_EMBEDDING_PROVIDER') ?: 'openai');
+        $this->model = $model ?? (getenv('PEST_EVALS_LARAVEL_EMBEDDING_MODEL') ?: 'text-embedding-3-small');
     }
 
     public function embed(array $inputs): array
@@ -29,7 +29,7 @@ final class LaravelAiEmbeddings implements EmbeddingsDriver
             throw new RuntimeException(
                 'The default embeddings driver requires the "laravel/ai" package. '
                 .'Install it with "composer require laravel/ai", or configure a '
-                .'custom driver via evals()->embeddingsUsing(...).'
+                .'custom driver via pest()->evals()->embeddingsUsing(...).'
             );
         }
 

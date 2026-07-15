@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Pest\Evals\Scorers;
 
 use Pest\Evals\Configuration;
-use Pest\Evals\Eval\EvalExpectationContext;
+use Pest\Evals\Eval\Context;
 use Pest\Evals\Plugin;
 use Pest\Evals\Support\VerbosePanel;
 
@@ -18,16 +18,18 @@ final class ScorerAssertion
         private readonly VerbosePanel $panel = new VerbosePanel,
     ) {}
 
-    public function assert(Scorer $scorer, string $output, float $threshold, ?EvalExpectationContext $context = null, ?string $expected = null): void
+    /**
+     * @param  array<int, string>  $outputs
+     */
+    public function assert(Scorer $scorer, array $outputs, float $threshold, ?Context $context = null, ?string $expected = null): void
     {
         if (! Plugin::isEvalMode() && Configuration::usesDefaultDrivers()) {
-            expect($output)->toBeString();
+            expect($outputs)->each->toBeString();
 
             return;
         }
 
-        $outputs = $context?->getSampleOutputs() ?? [$output];
-        $input = $context instanceof EvalExpectationContext ? $context->prompt : '';
+        $input = $context instanceof Context ? $context->prompt : '';
 
         foreach ($outputs as $sampleOutput) {
             $result = $scorer->score($input, $sampleOutput, $expected);

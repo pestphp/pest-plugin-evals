@@ -14,10 +14,8 @@ use WeakMap;
 /**
  * @internal
  */
-final class EvalExpectationContext
+final class Context
 {
-    public static ?self $current = null;
-
     /**
      * @var WeakMap<object, self>|null
      */
@@ -28,13 +26,12 @@ final class EvalExpectationContext
      */
     private ?Closure $resolvedTask = null;
 
-    /** @var array<int, string>|null */
-    private ?array $sampleOutputs = null;
-
     /**
+     * @param  string|Closure(string): string|Agent  $agent
      * @param  array<int, mixed>  $attachments
      */
     public function __construct(
+        public readonly string|Closure|Agent $agent,
         public readonly string $prompt,
         public readonly string $agentName,
         public readonly array $attachments = [],
@@ -49,8 +46,6 @@ final class EvalExpectationContext
     {
         self::$contexts ??= new WeakMap;
         self::$contexts[$expectation] = $context;
-
-        self::$current = $context;
     }
 
     /**
@@ -65,16 +60,15 @@ final class EvalExpectationContext
 
     public static function reset(): void
     {
-        self::$current = null;
         self::$contexts = null;
     }
 
     /**
      * @return array<int, string>
      */
-    public function resolveOutputs(string|Closure|Agent $agent): array
+    public function resolveOutputs(): array
     {
-        $this->resolvedTask = $this->resolveTask($agent);
+        $this->resolvedTask = $this->resolveTask($this->agent);
 
         return [($this->resolvedTask)($this->prompt)];
     }
@@ -96,22 +90,6 @@ final class EvalExpectationContext
         }
 
         return $outputs;
-    }
-
-    /**
-     * @param  array<int, string>  $outputs
-     */
-    public function setSampleOutputs(array $outputs): void
-    {
-        $this->sampleOutputs = $outputs;
-    }
-
-    /**
-     * @return array<int, string>|null
-     */
-    public function getSampleOutputs(): ?array
-    {
-        return $this->sampleOutputs;
     }
 
     /**

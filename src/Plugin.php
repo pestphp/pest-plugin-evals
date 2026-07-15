@@ -6,7 +6,7 @@ namespace Pest\Evals;
 
 use Pest\Contracts\Plugins\Bootable;
 use Pest\Contracts\Plugins\HandlesArguments;
-use Pest\Evals\Eval\EvalExpectationContext;
+use Pest\Evals\Eval\Context;
 use Pest\Plugins\Concerns\HandleArguments;
 use Pest\Plugins\Parallel;
 use Pest\Support\Container;
@@ -51,7 +51,7 @@ final class Plugin implements Bootable, HandlesArguments
     public function boot(): void
     {
         pest()->afterEach(function (): void {
-            EvalExpectationContext::reset();
+            Context::reset();
         });
     }
 

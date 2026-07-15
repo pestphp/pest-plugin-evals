@@ -6,7 +6,7 @@ namespace Pest\Evals\Expectations;
 
 use Closure;
 use Laravel\Ai\Contracts\Agent;
-use Pest\Evals\Eval\EvalExpectationContext;
+use Pest\Evals\Eval\Context;
 use Pest\Evals\Exceptions\EvalExpectationException;
 use Pest\Evals\Plugin;
 use Pest\Evals\Scorers\AgentTrajectory;
@@ -20,6 +20,7 @@ use Pest\Evals\Scorers\SemanticSimilarity;
 use Pest\Evals\Scorers\ToolCallMatch;
 use Pest\Evals\Support\Samples;
 use Pest\Expectation;
+use Pest\Mixins\Expectation as MatcherExpectation;
 use PHPUnit\Framework\Assert;
 
 /**
@@ -42,17 +43,19 @@ final class EvalExpectations
             Assert::markTestSkipped('Eval skipped. Run with [--evals] to evaluate against a real model.');
         }
 
-        $agent = $expectation->value;
+        $context = Context::for($expectation);
+        $agent = $context instanceof Context ? $context->agent : $expectation->value;
 
-        $context = new EvalExpectationContext(
+        $context = new Context(
+            agent: $agent,
             prompt: $prompt,
             agentName: $agent instanceof Closure ? 'Task' : class_basename($agent),
             attachments: $attachments,
         );
 
-        EvalExpectationContext::bind($expectation, $context);
+        Context::bind($expectation, $context);
 
-        $expectation->value = $context->resolveOutputs($agent)[0];
+        $expectation->value = $context->resolveOutputs()[0];
 
         return $expectation;
     }
@@ -63,41 +66,58 @@ final class EvalExpectations
      */
     public function repeat(Expectation $expectation, int $count): Expectation
     {
-        $context = EvalExpectationContext::for($expectation);
+        $context = Context::for($expectation);
 
-        if (! $context instanceof EvalExpectationContext) {
+        if (! $context instanceof Context) {
             throw EvalExpectationException::missingPrompt();
         }
 
-        $context->setSampleOutputs([$expectation->value, ...$context->resolveAdditionalOutputs($count - 1)]);
+        $first = $expectation->value;
+
+        $expectation->value = new Samples([ // @phpstan-ignore assign.propertyType
+            $first,
+            ...$context->resolveAdditionalOutputs($count - 1),
+        ]);
 
         return $expectation;
     }
 
-    public function toContain(string $needle): void
+    /**
+     * @param  MatcherExpectation<Samples>  $expectation
+     */
+    public function toContain(MatcherExpectation $expectation, string $needle): void
     {
-        foreach (Samples::all() as $index => $output) {
+        foreach ($this->outputs($expectation) as $index => $output) {
             Assert::assertStringContainsString($needle, $output, 'Sample #'.($index + 1)." does not contain '{$needle}'.");
         }
     }
 
-    public function toMatch(string $pattern): void
+    /**
+     * @param  MatcherExpectation<Samples>  $expectation
+     */
+    public function toMatch(MatcherExpectation $expectation, string $pattern): void
     {
-        foreach (Samples::all() as $index => $output) {
+        foreach ($this->outputs($expectation) as $index => $output) {
             Assert::assertMatchesRegularExpression($pattern, $output, 'Sample #'.($index + 1)." does not match '{$pattern}'.");
         }
     }
 
-    public function toBe(mixed $expected): void
+    /**
+     * @param  MatcherExpectation<Samples>  $expectation
+     */
+    public function toBe(MatcherExpectation $expectation, mixed $expected): void
     {
-        foreach (Samples::all() as $index => $output) {
+        foreach ($this->outputs($expectation) as $index => $output) {
             Assert::assertSame($expected, $output, 'Sample #'.($index + 1).' does not match expected.');
         }
     }
 
-    public function toBeJson(): void
+    /**
+     * @param  MatcherExpectation<Samples>  $expectation
+     */
+    public function toBeJson(MatcherExpectation $expectation): void
     {
-        foreach (Samples::all() as $index => $output) {
+        foreach ($this->outputs($expectation) as $index => $output) {
             Assert::assertJson($output, 'Sample #'.($index + 1).' is not valid JSON.');
         }
     }
@@ -108,7 +128,7 @@ final class EvalExpectations
      */
     public function toBeRelevant(Expectation $expectation, float $threshold = Scorer::DEFAULT_THRESHOLD): Expectation
     {
-        $this->scorerAssertion->assert(new Relevance, $expectation->value, $threshold, EvalExpectationContext::for($expectation));
+        $this->scorerAssertion->assert(new Relevance, $this->outputs($expectation), $threshold, Context::for($expectation));
 
         return $expectation;
     }
@@ -119,7 +139,7 @@ final class EvalExpectations
      */
     public function toBeSafe(Expectation $expectation, float $threshold = Scorer::DEFAULT_THRESHOLD): Expectation
     {
-        $this->scorerAssertion->assert(new Safety, $expectation->value, $threshold, EvalExpectationContext::for($expectation));
+        $this->scorerAssertion->assert(new Safety, $this->outputs($expectation), $threshold, Context::for($expectation));
 
         return $expectation;
     }
@@ -130,7 +150,7 @@ final class EvalExpectations
      */
     public function toBeFactual(Expectation $expectation, string $expected, float $threshold = Scorer::DEFAULT_THRESHOLD): Expectation
     {
-        $this->scorerAssertion->assert(new Factuality, $expectation->value, $threshold, EvalExpectationContext::for($expectation), $expected);
+        $this->scorerAssertion->assert(new Factuality, $this->outputs($expectation), $threshold, Context::for($expectation), $expected);
 
         return $expectation;
     }
@@ -141,7 +161,7 @@ final class EvalExpectations
      */
     public function toPassJudge(Expectation $expectation, string $criteria, float $threshold = Scorer::DEFAULT_THRESHOLD): Expectation
     {
-        $this->scorerAssertion->assert(new LlmJudge(criteria: $criteria), $expectation->value, $threshold, EvalExpectationContext::for($expectation));
+        $this->scorerAssertion->assert(new LlmJudge(criteria: $criteria), $this->outputs($expectation), $threshold, Context::for($expectation));
 
         return $expectation;
     }
@@ -152,7 +172,7 @@ final class EvalExpectations
      */
     public function toBeSimilar(Expectation $expectation, string $expected, float $threshold = Scorer::DEFAULT_THRESHOLD): Expectation
     {
-        $this->scorerAssertion->assert(new SemanticSimilarity, $expectation->value, $threshold, EvalExpectationContext::for($expectation), $expected);
+        $this->scorerAssertion->assert(new SemanticSimilarity, $this->outputs($expectation), $threshold, Context::for($expectation), $expected);
 
         return $expectation;
     }
@@ -164,7 +184,7 @@ final class EvalExpectations
      */
     public function toHaveToolCalls(Expectation $expectation, array $expected, float $threshold = Scorer::DEFAULT_THRESHOLD): Expectation
     {
-        $this->scorerAssertion->assert(new ToolCallMatch(tools: $expected), $expectation->value, $threshold, EvalExpectationContext::for($expectation));
+        $this->scorerAssertion->assert(new ToolCallMatch(tools: $expected), $this->outputs($expectation), $threshold, Context::for($expectation));
 
         return $expectation;
     }
@@ -176,7 +196,7 @@ final class EvalExpectations
      */
     public function toFollowTrajectory(Expectation $expectation, array $steps, float $threshold = Scorer::DEFAULT_THRESHOLD, bool $strictOrder = true): Expectation
     {
-        $this->scorerAssertion->assert(new AgentTrajectory(sequence: $steps, strictOrder: $strictOrder), $expectation->value, $threshold, EvalExpectationContext::for($expectation));
+        $this->scorerAssertion->assert(new AgentTrajectory(sequence: $steps, strictOrder: $strictOrder), $this->outputs($expectation), $threshold, Context::for($expectation));
 
         return $expectation;
     }
@@ -187,8 +207,19 @@ final class EvalExpectations
      */
     public function toPassScorer(Expectation $expectation, Scorer $scorer, float $threshold = Scorer::DEFAULT_THRESHOLD, ?string $expected = null): Expectation
     {
-        $this->scorerAssertion->assert($scorer, $expectation->value, $threshold, EvalExpectationContext::for($expectation), $expected);
+        $this->scorerAssertion->assert($scorer, $this->outputs($expectation), $threshold, Context::for($expectation), $expected);
 
         return $expectation;
+    }
+
+    /**
+     * @param  Expectation<string>|MatcherExpectation<Samples>  $expectation
+     * @return array<int, string>
+     */
+    private function outputs(Expectation|MatcherExpectation $expectation): array
+    {
+        $value = $expectation->value;
+
+        return $value instanceof Samples ? $value->outputs : [$value];
     }
 }

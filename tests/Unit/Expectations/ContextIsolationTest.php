@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Pest\Evals\Configuration;
-use Pest\Evals\Eval\EvalExpectationContext;
+use Pest\Evals\Eval\Context;
 use Pest\Evals\Plugin;
 
 beforeEach(function (): void {
-    EvalExpectationContext::reset();
+    Context::reset();
     Configuration::flush();
     Plugin::resetEvalMode();
     $_SERVER['PEST_EVALS'] = '1';
@@ -18,66 +18,110 @@ afterEach(function (): void {
     Plugin::resetEvalMode();
 });
 
-describe('context isolation between interleaved prompt expectations', function (): void {
-    it('sends the older expectation input to the judge, not the newer one', function (): void {
-        $prompts = [];
+it('sends the older expectation input to the judge, not the newer one', function (): void {
+    $prompts = [];
 
-        pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$prompts): string {
-            $prompts[] = $prompt;
+    pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$prompts): string {
+        $prompts[] = $prompt;
 
-            return '{"score": 1.0, "reasoning": "looks great"}';
-        });
+        return '{"score": 1.0, "reasoning": "looks great"}';
+    });
 
-        $foo = expect(fn (string $input): string => 'An answer about alpha.')
-            ->prompt('QUESTION_ALPHA');
+    $foo = expect(fn (string $input): string => 'An answer about alpha.')
+        ->prompt('QUESTION_ALPHA');
 
-        $bar = expect(fn (string $input): string => 'An answer about beta.')
-            ->prompt('QUESTION_BETA');
+    $bar = expect(fn (string $input): string => 'An answer about beta.')
+        ->prompt('QUESTION_BETA');
 
-        $foo->toBeRelevant();
+    $foo->toBeRelevant();
 
-        expect($prompts)->toHaveCount(1);
-        expect($prompts[0])
+    expect($prompts)->toHaveCount(1);
+    expect($prompts[0])
+        ->toContain('QUESTION_ALPHA')
+        ->toContain('An answer about alpha.')
+        ->not->toContain('QUESTION_BETA')
+        ->not->toContain('An answer about beta.');
+
+    $bar->toBeRelevant();
+
+    expect($prompts)->toHaveCount(2);
+    expect($prompts[1])
+        ->toContain('QUESTION_BETA')
+        ->not->toContain('QUESTION_ALPHA');
+});
+
+it('scores the older expectation repeated samples, not the newer one', function (): void {
+    $prompts = [];
+
+    pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$prompts): string {
+        $prompts[] = $prompt;
+
+        return '{"score": 1.0, "reasoning": "looks great"}';
+    });
+
+    $foo = expect(fn (string $input): string => 'ALPHA_OUTPUT')
+        ->prompt('QUESTION_ALPHA')
+        ->repeat(2);
+
+    $bar = expect(fn (string $input): string => 'BETA_OUTPUT')
+        ->prompt('QUESTION_BETA')
+        ->repeat(2);
+
+    $foo->toBeRelevant();
+
+    expect($prompts)->toHaveCount(2);
+
+    foreach ($prompts as $prompt) {
+        expect($prompt)
             ->toContain('QUESTION_ALPHA')
-            ->toContain('An answer about alpha.')
+            ->toContain('ALPHA_OUTPUT')
             ->not->toContain('QUESTION_BETA')
-            ->not->toContain('An answer about beta.');
+            ->not->toContain('BETA_OUTPUT');
+    }
+});
 
-        $bar->toBeRelevant();
+it('asserts each stored expectation against its own samples, evaluated out of order', function (): void {
+    $alpha = expect(fn (string $input): string => 'ALPHA_OUTPUT')
+        ->prompt('QUESTION_ALPHA')
+        ->repeat(2);
 
-        expect($prompts)->toHaveCount(2);
-        expect($prompts[1])
-            ->toContain('QUESTION_BETA')
-            ->not->toContain('QUESTION_ALPHA');
-    });
+    $beta = expect(fn (string $input): string => 'BETA_OUTPUT')
+        ->prompt('QUESTION_BETA')
+        ->repeat(3);
 
-    it('scores the older expectation repeated samples, not the newer one', function (): void {
-        $prompts = [];
+    $alpha->toContain('ALPHA_OUTPUT');
+    $beta->toContain('BETA_OUTPUT');
 
-        pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$prompts): string {
-            $prompts[] = $prompt;
+    expect(fn () => $alpha->toContain('BETA_OUTPUT'))
+        ->toThrow(PHPUnit\Framework\ExpectationFailedException::class);
 
-            return '{"score": 1.0, "reasoning": "looks great"}';
-        });
+    expect(fn () => $beta->toContain('ALPHA_OUTPUT'))
+        ->toThrow(PHPUnit\Framework\ExpectationFailedException::class);
+});
 
-        $foo = expect(fn (string $input): string => 'ALPHA_OUTPUT')
-            ->prompt('QUESTION_ALPHA')
-            ->repeat(2);
+it('routes toBe, toMatch and toBeJson to the matching expectation samples', function (): void {
+    $json = expect(fn (string $input): string => '{"ok": true}')
+        ->prompt('QUESTION_JSON')
+        ->repeat(2);
 
-        $bar = expect(fn (string $input): string => 'BETA_OUTPUT')
-            ->prompt('QUESTION_BETA')
-            ->repeat(2);
+    $city = expect(fn (string $input): string => 'Paris')
+        ->prompt('QUESTION_CITY')
+        ->repeat(2);
 
-        $foo->toBeRelevant();
+    $city->toBe('Paris')->toMatch('/^Paris$/');
+    $json->toBeJson();
 
-        expect($prompts)->toHaveCount(2);
+    expect(fn () => $city->toBe('{"ok": true}'))
+        ->toThrow(PHPUnit\Framework\ExpectationFailedException::class);
+});
 
-        foreach ($prompts as $prompt) {
-            expect($prompt)
-                ->toContain('QUESTION_ALPHA')
-                ->toContain('ALPHA_OUTPUT')
-                ->not->toContain('QUESTION_BETA')
-                ->not->toContain('BETA_OUTPUT');
-        }
-    });
+it('does not hijack native matchers on plain string expectations sharing a sample value', function (): void {
+    expect(fn (string $input): string => 'Paris')
+        ->prompt('QUESTION_CITY')
+        ->repeat(2)
+        ->toContain('Paris');
+
+    expect('Paris')
+        ->toContain('Par')
+        ->toContain('ris');
 });

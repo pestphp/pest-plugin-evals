@@ -10,6 +10,7 @@ use Pest\Evals\Expectations\EvalExpectations;
 use Pest\Evals\Scorers\Scorer;
 use Pest\Evals\Support\Samples;
 use Pest\Expectation;
+use Pest\Mixins\Expectation as MatcherExpectation;
 
 if (! function_exists('expect')) {
     return;
@@ -28,20 +29,28 @@ expect()->extend('repeat', function (int $count) use ($evals): Expectation {
     return $evals->repeat($this, $count);
 });
 
-expect()->intercept('toContain', Samples::has(...), function (string $needle) use ($evals): void {
-    $evals->toContain($needle);
+expect()->intercept('toContain', Samples::class, function (string $needle) use ($evals): void {
+    /** @var MatcherExpectation<Samples> $expectation */
+    $expectation = $this; // @phpstan-ignore variable.undefined
+    $evals->toContain($expectation, $needle);
 });
 
-expect()->intercept('toMatch', Samples::has(...), function (string $pattern) use ($evals): void {
-    $evals->toMatch($pattern);
+expect()->intercept('toMatch', Samples::class, function (string $pattern) use ($evals): void {
+    /** @var MatcherExpectation<Samples> $expectation */
+    $expectation = $this; // @phpstan-ignore variable.undefined
+    $evals->toMatch($expectation, $pattern);
 });
 
-expect()->intercept('toBe', Samples::has(...), function (mixed $expected) use ($evals): void {
-    $evals->toBe($expected);
+expect()->intercept('toBe', Samples::class, function (mixed $expected) use ($evals): void {
+    /** @var MatcherExpectation<Samples> $expectation */
+    $expectation = $this; // @phpstan-ignore variable.undefined
+    $evals->toBe($expectation, $expected);
 });
 
-expect()->intercept('toBeJson', Samples::has(...), function () use ($evals): void {
-    $evals->toBeJson();
+expect()->intercept('toBeJson', Samples::class, function () use ($evals): void {
+    /** @var MatcherExpectation<Samples> $expectation */
+    $expectation = $this; // @phpstan-ignore variable.undefined
+    $evals->toBeJson($expectation);
 });
 
 expect()->extend('toBeRelevant', function (float $threshold = Scorer::DEFAULT_THRESHOLD) use ($evals): Expectation {

@@ -7,12 +7,12 @@ use Pest\Evals\Contracts\EmbeddingsDriver;
 use Pest\Evals\Contracts\JudgeDriver;
 use Pest\Evals\Drivers\LaravelAiEmbeddings;
 use Pest\Evals\Drivers\LaravelAiJudge;
-use Pest\Evals\Eval\EvalExpectationContext;
+use Pest\Evals\Eval\Context;
 use Pest\Evals\Plugin;
 use Pest\Evals\Scorers\SemanticSimilarity;
 
 beforeEach(function (): void {
-    EvalExpectationContext::$current = null;
+    Context::reset();
     Configuration::flush();
     Plugin::resetEvalMode();
     $_SERVER['PEST_EVALS'] = '1';

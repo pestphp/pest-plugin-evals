@@ -3,14 +3,14 @@
 declare(strict_types=1);
 
 use Illuminate\Container\Container;
-use Pest\Evals\Eval\EvalExpectationContext;
+use Pest\Evals\Eval\Context;
 use Pest\Evals\Plugin;
 use Pest\Evals\Tests\Fixtures\Agents\InstanceGreetingAgent;
 use Pest\Evals\Tests\Fixtures\Support\ContainerGreeting;
 use Pest\Evals\Tests\Fixtures\Support\ContainerResolvedPromptAgent;
 
 beforeEach(function (): void {
-    EvalExpectationContext::$current = null;
+    Context::reset();
     Plugin::resetEvalMode();
     $_SERVER['PEST_EVALS'] = '1';
 });
@@ -111,22 +111,24 @@ describe('samples', function (): void {
     });
 });
 
-describe('EvalExpectationContext', function (): void {
-    it('sets current context via prompt', function (): void {
-        expect(fn (string $input): string => 'output')
+describe('Context', function (): void {
+    it('binds context to the expectation via prompt', function (): void {
+        $expectation = expect(fn (string $input): string => 'output')
             ->prompt('test prompt');
 
-        expect(EvalExpectationContext::$current)->not->toBeNull();
-        expect(EvalExpectationContext::$current->prompt)->toBe('test prompt');
-        expect(EvalExpectationContext::$current->agentName)->toBe('Task');
+        $context = Context::for($expectation);
+
+        expect($context)->not->toBeNull();
+        expect($context->prompt)->toBe('test prompt');
+        expect($context->agentName)->toBe('Task');
     });
 
     it('sets agent name from class basename', function (): void {
         Container::getInstance()->bind(ContainerGreeting::class, fn (): ContainerGreeting => new ContainerGreeting('Hello'));
 
-        expect(ContainerResolvedPromptAgent::class)->prompt('World');
+        $expectation = expect(ContainerResolvedPromptAgent::class)->prompt('World');
 
-        expect(EvalExpectationContext::$current->agentName)->toBe('ContainerResolvedPromptAgent');
+        expect(Context::for($expectation)->agentName)->toBe('ContainerResolvedPromptAgent');
     });
 });
 
@@ -150,9 +152,9 @@ describe('prompt against a real agent (eval mode)', function (): void {
     it('sets agent name from instance class basename', function (): void {
         $agent = new InstanceGreetingAgent(new ContainerGreeting('Hi'));
 
-        expect($agent)->prompt('there');
+        $expectation = expect($agent)->prompt('there');
 
-        expect(EvalExpectationContext::$current->agentName)->toBe('InstanceGreetingAgent');
+        expect(Context::for($expectation)->agentName)->toBe('InstanceGreetingAgent');
     });
 });
 
@@ -170,7 +172,7 @@ describe('prompt outside eval mode', function (): void {
     });
 });
 
-describe('EvalExpectationContext resolveOutputs', function (): void {
+describe('Context resolveOutputs', function (): void {
     it('returns single output by default', function (): void {
         expect(fn (string $input): string => 'single output')
             ->prompt('test')
@@ -182,4 +184,49 @@ describe('EvalExpectationContext resolveOutputs', function (): void {
             ->prompt('hello world')
             ->toContain('hello world');
     });
+});
+
+it('re-prompts the same agent with a fresh input when chained', function (): void {
+    expect(fn (string $input): string => "echo: {$input}")
+        ->prompt('turn one')
+        ->toContain('turn one')
+        ->prompt('turn two')
+        ->toContain('turn two')
+        ->not->toContain('turn one');
+});
+
+it('re-runs the agent on each prompt in the chain', function (): void {
+    $calls = 0;
+    $agent = function (string $input) use (&$calls): string {
+        $calls++;
+
+        return $input;
+    };
+
+    expect($agent)
+        ->prompt('alpha')
+        ->toBe('alpha')
+        ->prompt('beta')
+        ->toBe('beta');
+
+    expect($calls)->toBe(2);
+});
+
+it('keeps re-prompting after a repeat in the chain', function (): void {
+    expect(fn (string $input): string => "value: {$input}")
+        ->prompt('alpha')
+        ->repeat(2)
+        ->toContain('alpha')
+        ->prompt('beta')
+        ->toContain('beta');
+});
+
+it('re-prompts an agent instance across turns', function (): void {
+    $agent = new InstanceGreetingAgent(new ContainerGreeting('Hello'));
+
+    expect($agent)
+        ->prompt('Nuno')
+        ->toBe('Hello Nuno')
+        ->prompt('World')
+        ->toBe('Hello World');
 });

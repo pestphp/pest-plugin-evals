@@ -30,6 +30,7 @@ final class Configuration
 
     public static function usesDefaultDrivers(): bool
     {
+        return ! self::$judge instanceof JudgeDriver && ! self::$embeddings instanceof EmbeddingsDriver;
     }
 
     public static function flush(): void

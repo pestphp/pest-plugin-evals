@@ -4,21 +4,27 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Scorers;
 
+use InvalidArgumentException;
+use Pest\Evals\Contracts\RequiresJudge;
 use Pest\Evals\Support\Judge;
 
 /**
  * @internal
  */
-final class Factuality implements Scorer
+final class Factuality implements RequiresJudge, Scorer
 {
+    private const array CATEGORY_SCORES = [
+        'equal' => 1.0,
+        'approximately_equal' => 0.9,
+        'superset' => 0.8,
+        'subset' => 0.6,
+        'disagreement' => 0.0,
+    ];
+
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {
         if ($expected === null) {
-            return new ScorerResult(
-                score: 0.0,
-                reasoning: 'No reference answer provided for factuality check.',
-                scorer: self::class,
-            );
+            throw new InvalidArgumentException('The [Factuality] scorer requires a reference answer to compare against.');
         }
 
         $response = Judge::using(self::class)
@@ -32,7 +38,7 @@ final class Factuality implements Scorer
         $category = $response->string('category', 'unknown');
 
         return new ScorerResult(
-            score: $response->score(),
+            score: self::CATEGORY_SCORES[$category] ?? $response->score(),
             reasoning: "[{$category}] {$response->reasoning()}",
             scorer: self::class,
         );

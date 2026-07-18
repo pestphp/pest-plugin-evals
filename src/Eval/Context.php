@@ -79,7 +79,7 @@ final class Context
     public function resolveAdditionalOutputs(int $count): array
     {
         if (! $this->resolvedTask instanceof Closure) {
-            throw EvalExpectationException::promptNotCalled();
+            throw EvalExpectationException::missingPrompt();
         }
 
         $task = $this->resolvedTask;

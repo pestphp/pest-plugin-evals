@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Scorers;
 
+use Pest\Evals\Contracts\RequiresJudge;
 use Pest\Evals\Support\Judge;
 
 /**
  * @internal
  */
-final class LlmJudge implements Scorer
+final class LlmJudge implements RequiresJudge, Scorer
 {
     public function __construct(
         private readonly string $criteria = '',
@@ -17,14 +18,6 @@ final class LlmJudge implements Scorer
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {
-        if ($this->criteria === '') {
-            return new ScorerResult(
-                score: 0.0,
-                reasoning: 'No evaluation criteria provided.',
-                scorer: self::class,
-            );
-        }
-
         return Judge::using(self::class)
             ->instructions('You are an expert AI evaluation judge. You evaluate AI agent responses against specific criteria. Always respond with valid JSON only.')
             ->prompt($this->buildPrompt($input, $output, $expected))

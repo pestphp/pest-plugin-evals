@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Pest\Evals\Scorers;
 
+use Pest\Evals\Contracts\RequiresJudge;
 use Pest\Evals\Support\Judge;
 
 /**
  * @internal
  */
-final class Safety implements Scorer
+final class Safety implements RequiresJudge, Scorer
 {
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {

@@ -20,6 +20,7 @@ use Pest\Evals\Scorers\SemanticSimilarity;
 use Pest\Evals\Scorers\ToolCallMatch;
 use Pest\Evals\Support\Samples;
 use Pest\Expectation;
+use Pest\Expectations\OppositeExpectation;
 use Pest\Mixins\Expectation as MatcherExpectation;
 use PHPUnit\Framework\Assert;
 
@@ -61,20 +62,28 @@ final class EvalExpectations
     }
 
     /**
-     * @param  Expectation<string>  $expectation
-     * @return Expectation<string>
+     * @param  Expectation<string|Samples>  $expectation
+     * @return Expectation<string|Samples>
      */
     public function repeat(Expectation $expectation, int $count): Expectation
     {
+        if ($count < 1) {
+            throw EvalExpectationException::invalidRepeatCount($count);
+        }
+
         $context = Context::for($expectation);
 
         if (! $context instanceof Context) {
             throw EvalExpectationException::missingPrompt();
         }
 
+        if ($expectation->value instanceof Samples) {
+            throw EvalExpectationException::repeatAlreadyCalled();
+        }
+
         $first = $expectation->value;
 
-        $expectation->value = new Samples([ // @phpstan-ignore assign.propertyType
+        $expectation->value = new Samples([
             $first,
             ...$context->resolveAdditionalOutputs($count - 1),
         ]);
@@ -85,40 +94,92 @@ final class EvalExpectations
     /**
      * @param  MatcherExpectation<Samples>  $expectation
      */
-    public function toContain(MatcherExpectation $expectation, string $needle): void
+    public function toContain(MatcherExpectation $expectation, string ...$needles): void
     {
-        foreach ($this->outputs($expectation) as $index => $output) {
-            Assert::assertStringContainsString($needle, $output, 'Sample #'.($index + 1)." does not contain '{$needle}'.");
+        $outputs = $this->outputs($expectation);
+
+        if ($this->isNegated()) {
+            foreach ($outputs as $output) {
+                foreach ($needles as $needle) {
+                    if (str_contains($output, $needle)) {
+                        return;
+                    }
+                }
+            }
+
+            Assert::fail('No sample contains any of the given needles.');
+        }
+
+        foreach ($outputs as $index => $output) {
+            foreach ($needles as $needle) {
+                Assert::assertStringContainsString($needle, $output, 'Sample #'.($index + 1)." does not contain '{$needle}'.");
+            }
         }
     }
 
     /**
      * @param  MatcherExpectation<Samples>  $expectation
      */
-    public function toMatch(MatcherExpectation $expectation, string $pattern): void
+    public function toMatch(MatcherExpectation $expectation, string $pattern, string $message = ''): void
     {
-        foreach ($this->outputs($expectation) as $index => $output) {
-            Assert::assertMatchesRegularExpression($pattern, $output, 'Sample #'.($index + 1)." does not match '{$pattern}'.");
+        $outputs = $this->outputs($expectation);
+
+        if ($this->isNegated()) {
+            foreach ($outputs as $output) {
+                if (preg_match($pattern, $output) === 1) {
+                    return;
+                }
+            }
+
+            Assert::fail("No sample matches '{$pattern}'.");
+        }
+
+        foreach ($outputs as $index => $output) {
+            Assert::assertMatchesRegularExpression($pattern, $output, $this->message($message, 'Sample #'.($index + 1)." does not match '{$pattern}'."));
         }
     }
 
     /**
      * @param  MatcherExpectation<Samples>  $expectation
      */
-    public function toBe(MatcherExpectation $expectation, mixed $expected): void
+    public function toBe(MatcherExpectation $expectation, mixed $expected, string $message = ''): void
     {
-        foreach ($this->outputs($expectation) as $index => $output) {
-            Assert::assertSame($expected, $output, 'Sample #'.($index + 1).' does not match expected.');
+        $outputs = $this->outputs($expectation);
+
+        if ($this->isNegated()) {
+            foreach ($outputs as $output) {
+                if ($output === $expected) {
+                    return;
+                }
+            }
+
+            Assert::fail('No sample matches the expected value.');
+        }
+
+        foreach ($outputs as $index => $output) {
+            Assert::assertSame($expected, $output, $this->message($message, 'Sample #'.($index + 1).' does not match expected.'));
         }
     }
 
     /**
      * @param  MatcherExpectation<Samples>  $expectation
      */
-    public function toBeJson(MatcherExpectation $expectation): void
+    public function toBeJson(MatcherExpectation $expectation, string $message = ''): void
     {
-        foreach ($this->outputs($expectation) as $index => $output) {
-            Assert::assertJson($output, 'Sample #'.($index + 1).' is not valid JSON.');
+        $outputs = $this->outputs($expectation);
+
+        if ($this->isNegated()) {
+            foreach ($outputs as $output) {
+                if (json_validate($output)) {
+                    return;
+                }
+            }
+
+            Assert::fail('No sample is valid JSON.');
+        }
+
+        foreach ($outputs as $index => $output) {
+            Assert::assertJson($output, $this->message($message, 'Sample #'.($index + 1).' is not valid JSON.'));
         }
     }
 
@@ -221,5 +282,21 @@ final class EvalExpectations
         $value = $expectation->value;
 
         return $value instanceof Samples ? $value->outputs : [$value];
+    }
+
+    private function isNegated(): bool
+    {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 12) as $frame) {
+            if (($frame['class'] ?? null) === OppositeExpectation::class) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function message(string $custom, string $default): string
+    {
+        return $custom === '' ? $default : "{$custom} {$default}";
     }
 }

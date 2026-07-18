@@ -15,20 +15,12 @@ final class AgentTrajectory implements Scorer
      * @param  array<int, string>  $sequence  Expected tool call sequence (in order)
      */
     public function __construct(
-        private array $sequence = [],
+        private readonly array $sequence = [],
         private readonly bool $strictOrder = true,
     ) {}
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {
-        if ($this->sequence === []) {
-            return new ScorerResult(
-                score: 0.0,
-                reasoning: 'No expected tool sequence provided.',
-                scorer: self::class,
-            );
-        }
-
         $toolCalls = ToolCallParser::namesFromOutput($output);
 
         if ($toolCalls === null) {

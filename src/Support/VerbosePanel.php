@@ -20,17 +20,20 @@ final class VerbosePanel
         string $output,
         string $reasoning,
         float $score,
+        int $sample = 1,
+        int $samples = 1,
     ): void {
         /** @var OutputInterface $console */
         $console = Container::getInstance()->get(OutputInterface::class);
 
         $icon = $passed ? '<fg=green>✓ PASS</>' : '<fg=red>✗ FAIL</>';
         $percentage = number_format($score * 100);
+        $sampleSuffix = $samples > 1 ? " — sample {$sample}/{$samples}" : '';
 
         $lines = [
             '',
             '  <fg=gray>'.str_repeat('─', 60).'</>',
-            "  Assertion: <fg=white>{$scorer}</> (threshold: {$threshold})",
+            "  Assertion: <fg=white>{$scorer}</> (threshold: {$threshold}){$sampleSuffix}",
             '',
             "  {$icon}",
             '',

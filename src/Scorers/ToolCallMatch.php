@@ -22,14 +22,6 @@ final class ToolCallMatch implements Scorer
 
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {
-        if ($this->tools === []) {
-            return new ScorerResult(
-                score: 0.0,
-                reasoning: 'No expected tool calls provided.',
-                scorer: self::class,
-            );
-        }
-
         $toolCalls = ToolCallParser::fromOutput($output);
 
         if ($toolCalls === null) {

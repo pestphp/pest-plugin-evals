@@ -25,32 +25,32 @@ expect()->extend('prompt', function (string $prompt, array $attachments = []) us
 });
 
 expect()->extend('repeat', function (int $count) use ($evals): Expectation {
-    /** @var Expectation<string> $this */
+    /** @var Expectation<string|Samples> $this */
     return $evals->repeat($this, $count);
 });
 
-expect()->intercept('toContain', Samples::class, function (string $needle) use ($evals): void {
+expect()->intercept('toContain', Samples::class, function (string ...$needles) use ($evals): void {
     /** @var MatcherExpectation<Samples> $expectation */
     $expectation = $this; // @phpstan-ignore variable.undefined
-    $evals->toContain($expectation, $needle);
+    $evals->toContain($expectation, ...$needles);
 });
 
-expect()->intercept('toMatch', Samples::class, function (string $pattern) use ($evals): void {
+expect()->intercept('toMatch', Samples::class, function (string $pattern, string $message = '') use ($evals): void {
     /** @var MatcherExpectation<Samples> $expectation */
     $expectation = $this; // @phpstan-ignore variable.undefined
-    $evals->toMatch($expectation, $pattern);
+    $evals->toMatch($expectation, $pattern, $message);
 });
 
-expect()->intercept('toBe', Samples::class, function (mixed $expected) use ($evals): void {
+expect()->intercept('toBe', Samples::class, function (mixed $expected, string $message = '') use ($evals): void {
     /** @var MatcherExpectation<Samples> $expectation */
     $expectation = $this; // @phpstan-ignore variable.undefined
-    $evals->toBe($expectation, $expected);
+    $evals->toBe($expectation, $expected, $message);
 });
 
-expect()->intercept('toBeJson', Samples::class, function () use ($evals): void {
+expect()->intercept('toBeJson', Samples::class, function (string $message = '') use ($evals): void {
     /** @var MatcherExpectation<Samples> $expectation */
     $expectation = $this; // @phpstan-ignore variable.undefined
-    $evals->toBeJson($expectation);
+    $evals->toBeJson($expectation, $message);
 });
 
 expect()->extend('toBeRelevant', function (float $threshold = Scorer::DEFAULT_THRESHOLD) use ($evals): Expectation {

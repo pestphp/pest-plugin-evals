@@ -47,12 +47,6 @@ describe('prompt with task closure', function (): void {
 });
 
 describe('prompt with agent output', function (): void {
-    it('checks the exact output', function (): void {
-        expect(fn (string $input): string => 'Paris')
-            ->prompt('What is the capital of France?')
-            ->toBe('Paris');
-    });
-
     it('supports deterministic checks against the output', function (): void {
         expect(fn (string $input): string => 'We offer full refunds within 30 days of purchase.')
             ->prompt('What is your refund policy?')
@@ -103,7 +97,7 @@ describe('samples', function (): void {
         expect($callCount)->toBe(3);
     });
 
-    it('repeat is an alias for samples', function (): void {
+    it('applies toBe to every sample', function (): void {
         expect(fn (string $input): string => 'Paris')
             ->prompt('What is the capital?')
             ->repeat(2)

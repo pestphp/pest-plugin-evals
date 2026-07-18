@@ -27,8 +27,8 @@ final class LaravelAiEmbeddings implements EmbeddingsDriver
     {
         if (! class_exists(Embeddings::class)) {
             throw new RuntimeException(
-                'The default embeddings driver requires the "laravel/ai" package. '
-                .'Install it with "composer require laravel/ai", or configure a '
+                'The default embeddings driver requires the [laravel/ai] package. '
+                .'Install it with [composer require laravel/ai], or configure a '
                 .'custom driver via pest()->evals()->embeddingsUsing(...).'
             );
         }

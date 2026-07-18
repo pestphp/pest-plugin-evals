@@ -32,8 +32,18 @@ final class ToolCallParser
             return null;
         }
 
-        if (isset($decoded[0]) && is_string($decoded[0])) {
-            return array_values(array_filter($decoded, is_string(...)));
+        if (array_is_list($decoded) && $decoded !== []) {
+            $names = [];
+
+            foreach ($decoded as $item) {
+                if (is_string($item)) {
+                    $names[] = $item;
+                } elseif (is_array($item) && isset($item['name']) && is_string($item['name'])) {
+                    $names[] = $item['name'];
+                }
+            }
+
+            return $names === [] ? null : $names;
         }
 
         $toolCalls = self::fromDecoded($decoded);

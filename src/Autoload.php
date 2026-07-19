@@ -73,6 +73,16 @@ expect()->extend('toPassJudge', function (string $criteria, float $threshold = S
     return $evals->toPassJudge($this, $criteria, $threshold);
 });
 
+expect()->extend('toBeCorrect', function (string $expected, float $threshold = Scorer::DEFAULT_THRESHOLD) use ($evals): Expectation {
+    /** @var Expectation<string> $this */
+    return $evals->toBeFactual($this, $expected, $threshold);
+});
+
+expect()->extend('toSatisfy', function (string $criteria, float $threshold = Scorer::DEFAULT_THRESHOLD) use ($evals): Expectation {
+    /** @var Expectation<string> $this */
+    return $evals->toPassJudge($this, $criteria, $threshold);
+});
+
 expect()->extend('toBeSimilar', function (string $expected, float $threshold = Scorer::DEFAULT_THRESHOLD) use ($evals): Expectation {
     /** @var Expectation<string> $this */
     return $evals->toBeSimilar($this, $expected, $threshold);

@@ -59,6 +59,40 @@ describe('custom judge driver', function (): void {
     });
 });
 
+describe('fluent aliases', function (): void {
+    it('aliases toPassJudge as toSatisfy', function (): void {
+        $calls = [];
+
+        pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$calls): string {
+            $calls[] = [$instructions, $prompt];
+
+            return '{"score": 1.0, "reasoning": "looks great"}';
+        });
+
+        expect(fn (string $input): string => 'The capital of France is Paris.')
+            ->prompt('What is the capital of France?')
+            ->toSatisfy('Mentions Paris.');
+
+        expect($calls)->toHaveCount(1);
+    });
+
+    it('aliases toBeFactual as toBeCorrect', function (): void {
+        $driver = new class implements JudgeDriver
+        {
+            public function generate(string $instructions, string $prompt): string
+            {
+                return '{"score": 0.95, "category": "equal", "reasoning": "matches"}';
+            }
+        };
+
+        pest()->evals()->judgeUsing($driver);
+
+        expect(fn (string $input): string => 'Tokyo')
+            ->prompt('Capital of Japan?')
+            ->toBeCorrect(expected: 'Tokyo');
+    });
+});
+
 describe('custom embeddings driver', function (): void {
     it('scores similarity through an injected closure without laravel/ai', function (): void {
         pest()->evals()->embeddingsUsing(fn (array $inputs): array => [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]]);

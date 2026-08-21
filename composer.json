@@ -30,13 +30,13 @@
         "pestphp/pest-plugin": "^5.0.0"
     },
     "require-dev": {
-        "laravel/ai": "^0.10.2",
+        "laravel/ai": "^0.10.2 || ^0.11.0",
         "laravel/framework": "^13.23.0",
         "orchestra/testbench": "^11.1.0",
         "pestphp/pest-dev-tools": "^5.0.0"
     },
     "conflict": {
-        "laravel/ai": "<0.10.2 || >=0.11.0",
+        "laravel/ai": "<0.10.2 || >=0.12.0",
         "pestphp/pest": "<5.0.0"
     },
     "autoload": {

@@ -36,6 +36,7 @@
         "pestphp/pest-dev-tools": "^5.0.0"
     },
     "conflict": {
+        "laravel/ai": "<1.0.0 || >=2.0.0",
         "pestphp/pest": "<5.0.0"
     },
     "autoload": {

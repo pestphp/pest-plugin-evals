@@ -7,6 +7,8 @@ use Pest\Evals\Contracts\EmbeddingsDriver;
 use Pest\Evals\Contracts\JudgeDriver;
 use Pest\Evals\Drivers\LaravelAiEmbeddings;
 use Pest\Evals\Drivers\LaravelAiJudge;
+use Pest\Evals\Eval\Evaluation;
+use Pest\Evals\Eval\Verdict;
 
 beforeEach(function (): void {
     Configuration::flush();
@@ -28,9 +30,9 @@ describe('fluent setters', function (): void {
         $config = new Configuration();
         $judge = new class implements JudgeDriver
         {
-            public function generate(string $instructions, string $prompt): string
+            public function judge(Evaluation $evaluation): Verdict
             {
-                return '{"score": 1.0}';
+                return new Verdict(1.0, 'ok');
             }
         };
 
@@ -54,7 +56,7 @@ describe('fluent setters', function (): void {
 
     it('is chainable', function (): void {
         $config = new Configuration()
-            ->judgeUsing(fn (string $instructions, string $prompt): string => '{"score": 1.0}')
+            ->judgeUsing(fn (Evaluation $evaluation): float => 1.0)
             ->embeddingsUsing(fn (array $inputs): array => [[1.0]]);
 
         expect($config)->toBeInstanceOf(Configuration::class);
@@ -64,7 +66,7 @@ describe('fluent setters', function (): void {
 describe('flush', function (): void {
     it('clears configured drivers back to the defaults', function (): void {
         new Configuration()
-            ->judgeUsing(fn (string $instructions, string $prompt): string => '{"score": 1.0}')
+            ->judgeUsing(fn (Evaluation $evaluation): float => 1.0)
             ->embeddingsUsing(fn (array $inputs): array => [[1.0]]);
 
         Configuration::flush();

@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Pest\Evals\Drivers;
 
 use Closure;
+use InvalidArgumentException;
 use Pest\Evals\Contracts\JudgeDriver;
+use Pest\Evals\Eval\Evaluation;
+use Pest\Evals\Eval\Verdict;
 
 /**
  * @internal
@@ -13,14 +16,24 @@ use Pest\Evals\Contracts\JudgeDriver;
 final readonly class ClosureJudge implements JudgeDriver
 {
     /**
-     * @param  Closure(string, string): string  $callback
+     * @param  Closure(Evaluation): mixed  $callback  Returns a float score or a Verdict.
      */
     public function __construct(
         private Closure $callback,
     ) {}
 
-    public function generate(string $instructions, string $prompt): string
+    public function judge(Evaluation $evaluation): Verdict
     {
-        return (string) ($this->callback)($instructions, $prompt);
+        $verdict = ($this->callback)($evaluation);
+
+        if ($verdict instanceof Verdict) {
+            return $verdict;
+        }
+
+        if (! is_int($verdict) && ! is_float($verdict)) {
+            throw new InvalidArgumentException('A judge closure must return a float score or a ['.Verdict::class.'], got ['.get_debug_type($verdict).'].');
+        }
+
+        return new Verdict((float) $verdict, 'Scored by a custom judge.');
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Pest\Evals\Configuration;
 use Pest\Evals\Eval\Context;
+use Pest\Evals\Eval\Evaluation;
 use Pest\Evals\Plugin;
 use Pest\Evals\Scorers\Scorer;
 use Pest\Evals\Scorers\ScorerResult;
@@ -28,7 +29,7 @@ describe('outside eval mode', function (): void {
     });
 
     it('does not run embeddings scorers when only a judge driver is configured', function (): void {
-        pest()->evals()->judgeUsing(fn (string $instructions, string $prompt): string => '{"score": 1.0}');
+        pest()->evals()->judgeUsing(fn (Evaluation $evaluation): float => 1.0);
 
         expect('any hardcoded string')->toBeSimilar('anything');
     });
@@ -36,10 +37,10 @@ describe('outside eval mode', function (): void {
     it('runs judge scorers when a custom judge driver is configured', function (): void {
         $calls = 0;
 
-        pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$calls): string {
+        pest()->evals()->judgeUsing(function (Evaluation $evaluation) use (&$calls): float {
             $calls++;
 
-            return '{"score": 1.0, "reasoning": "ok"}';
+            return 1.0;
         });
 
         expect('output')->toBeRelevant();
@@ -110,7 +111,7 @@ describe('threshold validation', function (): void {
     });
 
     it('accepts the boundaries', function (): void {
-        pest()->evals()->judgeUsing(fn (string $instructions, string $prompt): string => '{"score": 1.0, "reasoning": "ok"}');
+        pest()->evals()->judgeUsing(fn (Evaluation $evaluation): float => 1.0);
 
         expect('output')->toBeRelevant(0.0)->toBeRelevant(1.0);
     });

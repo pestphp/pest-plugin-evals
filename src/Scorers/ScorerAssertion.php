@@ -74,7 +74,7 @@ final class ScorerAssertion
             return true;
         }
 
-        if ($scorer instanceof RequiresJudge && Configuration::usesDefaultJudge()) {
+        if ($scorer instanceof RequiresJudge && ! Configuration::usesStubbedJudge()) {
             return false;
         }
 

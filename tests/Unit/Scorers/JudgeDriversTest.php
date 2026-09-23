@@ -9,6 +9,7 @@ use Laravel\Ai\Prompts\ClassificationPrompt;
 use Laravel\Ai\Responses\Data\ScoreAnswer;
 use Laravel\Ai\StructuredAnonymousAgent;
 use Pest\Evals\Configuration;
+use Pest\Evals\Contracts\JudgeDriver;
 use Pest\Evals\Drivers\LaravelAiClassifier;
 use Pest\Evals\Drivers\LaravelAiJudge;
 use Pest\Evals\Eval\Evaluation;
@@ -27,14 +28,34 @@ it('registers the classifier as the judge and keeps the eval gate', function ():
     expect(Configuration::resolvedJudge())->toBeInstanceOf(LaravelAiClassifier::class)
         ->and(Configuration::resolvedJudge()->provider)->toBe('typesafe')
         ->and(Configuration::resolvedJudge()->model)->toBe('jev-latest')
-        ->and(Configuration::usesDefaultJudge())->toBeTrue();
+        ->and(Configuration::usesStubbedJudge())->toBeFalse();
 });
 
 it('keeps the eval gate for an explicit laravel ai judge', function (): void {
     pest()->evals()->judgeUsing(new LaravelAiJudge(model: 'gpt-explicit'));
 
-    expect(Configuration::usesDefaultJudge())->toBeTrue();
+    expect(Configuration::usesStubbedJudge())->toBeFalse();
 });
+
+it('gates a custom judge driver behind the eval flag', function (): void {
+    pest()->evals()->judgeUsing(new class implements JudgeDriver
+    {
+        public function judge(Evaluation $evaluation): Verdict
+        {
+            return new Verdict(1.0, 'paid call');
+        }
+    });
+
+    expect(Configuration::usesStubbedJudge())->toBeFalse();
+});
+
+it('rejects levels that are out of range or unordered', function (array $levels): void {
+    new Evaluation(['output' => 'a'], 'q', $levels);
+})->throws(InvalidArgumentException::class, 'ordered from worst to best')->with([
+    'descending' => [['Good' => 1.0, 'Bad' => 0.0]],
+    'above one' => [['Bad' => 0.0, 'Good' => 2.0]],
+    'negative' => [['Bad' => -0.5, 'Good' => 1.0]],
+]);
 
 it('rejects a judge closure that returns neither a score nor a verdict', function (): void {
     pest()->evals()->judgeUsing(fn (Evaluation $evaluation): array => ['score' => 0.2]);
@@ -45,7 +66,7 @@ it('rejects a judge closure that returns neither a score nor a verdict', functio
 it('is replaced by a later judge stub', function (): void {
     pest()->evals()->classify()->judgeUsing(fn (Evaluation $evaluation): Verdict => new Verdict(1.0, 'stubbed'));
 
-    expect(Configuration::usesDefaultJudge())->toBeFalse()
+    expect(Configuration::usesStubbedJudge())->toBeTrue()
         ->and(new Relevance()->score('q', 'a')->reasoning)->toBe('stubbed');
 });
 
@@ -63,14 +84,11 @@ describe('laravel ai judge', function (): void {
             && str_contains($prompt->agent->instructions(), '4: Perfectly relevant, directly addresses the input'));
     });
 
-    it('scores an out-of-range level as zero', function (): void {
+    it('fails loudly on an out-of-range level', function (): void {
         StructuredAnonymousAgent::fake([['reasoning' => 'Odd.', 'level' => 7]]);
 
-        $result = new Relevance()->score('q', 'a');
-
-        expect($result->score)->toBe(0.0)
-            ->and($result->reasoning)->toBe('The judge returned no valid level. Odd.');
-    });
+        new Relevance()->score('q', 'a');
+    })->throws(RuntimeException::class, 'The judge returned no valid level');
 });
 
 describe('laravel ai classifier', function (): void {

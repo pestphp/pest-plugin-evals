@@ -39,7 +39,7 @@ it('includes the reference answer when an expected output is given', function ()
 
     new LlmJudge(criteria: 'Matches the reference.')->score('question', 'output', 'the reference answer');
 
-    expect($evaluations[0]->state['expected'])->toBe('the reference answer');
+    expect($evaluations[0]->state['reference answer'])->toBe('the reference answer');
 });
 
 it('clamps custom judge scores into the unit range', function (float $score, float $expected): void {

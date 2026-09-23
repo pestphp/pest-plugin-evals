@@ -21,8 +21,8 @@ final class Factuality implements RequiresJudge, Scorer
         }
 
         return Judge::evaluate(self::class, new Evaluation(
-            state: ['input' => $input, 'output' => $output, 'expected' => $expected],
-            question: 'Classify the factual relationship between the output and the expected reference answer.',
+            state: ['input' => $input, 'output' => $output, 'reference answer' => $expected],
+            question: 'Classify the factual relationship between the output and the reference answer.',
             levels: [
                 'Disagreement: the output contradicts the reference' => 0.0,
                 'Subset: the output contains some but not all reference facts' => 0.6,

@@ -55,7 +55,7 @@ final class LaravelAiJudge implements JudgeDriver
         $reasoning = is_string($verdict['reasoning'] ?? null) ? $verdict['reasoning'] : 'No reasoning provided.';
 
         if ($level === null) {
-            return new Verdict(0.0, 'The judge returned no valid level. '.$reasoning);
+            throw new RuntimeException('The judge returned no valid level: '.json_encode($verdict));
         }
 
         return new Verdict($evaluation->levels[$level], $reasoning, $level);

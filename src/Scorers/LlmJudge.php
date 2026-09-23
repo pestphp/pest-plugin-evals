@@ -20,7 +20,7 @@ final class LlmJudge implements RequiresJudge, Scorer
     public function score(string $input, string $output, ?string $expected = null): ScorerResult
     {
         return Judge::evaluate(self::class, new Evaluation(
-            state: array_filter(['input' => $input, 'output' => $output, 'expected' => $expected], fn (?string $value): bool => $value !== null),
+            state: array_filter(['input' => $input, 'output' => $output, 'reference answer' => $expected], fn (?string $value): bool => $value !== null),
             question: "Evaluate the output against these criteria: {$this->criteria}",
             levels: [
                 'Completely fails to meet the criteria' => 0.0,

@@ -29,11 +29,9 @@ final class Configuration
         return self::$embeddings ?? new LaravelAiEmbeddings();
     }
 
-    public static function usesDefaultJudge(): bool
+    public static function usesStubbedJudge(): bool
     {
-        return ! self::$judge instanceof JudgeDriver
-            || self::$judge instanceof LaravelAiJudge
-            || self::$judge instanceof LaravelAiClassifier;
+        return self::$judge instanceof ClosureJudge;
     }
 
     public static function usesDefaultEmbeddings(): bool

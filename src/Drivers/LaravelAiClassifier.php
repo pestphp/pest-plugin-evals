@@ -42,16 +42,22 @@ final class LaravelAiClassifier implements JudgeDriver
 
         $level = $evaluation->labels()[$answer->level()] ?? null;
 
-        if ($answer->probabilities === []) {
-            return new Verdict($level === null ? 0.0 : $evaluation->levels[$level], 'Classified without probabilities.', $level);
+        if ($level === null) {
+            throw new RuntimeException("The classifier returned no valid level: [{$answer->level()}].");
         }
 
-        $reasoning = sprintf('Classified with %.0f%% probability', max($answer->probabilities) * 100);
+        if ($answer->probabilities === []) {
+            return new Verdict($evaluation->levels[$level], 'Classified without probabilities.', $level);
+        }
 
-        return new Verdict(
-            $evaluation->weightedScore($answer->probabilities),
-            $answer->confidence === null ? "{$reasoning}." : sprintf('%s and %.2f confidence.', $reasoning, $answer->confidence),
-            $level,
-        );
+        $probability = (int) round(max($answer->probabilities) * 100);
+        $reasoning = "Classified with {$probability}% probability";
+
+        if ($answer->confidence !== null) {
+            $confidence = round($answer->confidence, 2);
+            $reasoning .= " and {$confidence} confidence";
+        }
+
+        return new Verdict($evaluation->weightedScore($answer->probabilities), "{$reasoning}.", $level);
     }
 }

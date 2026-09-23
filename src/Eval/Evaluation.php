@@ -21,6 +21,16 @@ final readonly class Evaluation
         if (count($levels) < 2) {
             throw new InvalidArgumentException('An evaluation requires at least two levels.');
         }
+
+        $previous = 0.0;
+
+        foreach ($levels as $label => $score) {
+            if ($score < $previous || $score > 1.0) {
+                throw new InvalidArgumentException("Level [{$label}] must score between 0.0 and 1.0, ordered from worst to best.");
+            }
+
+            $previous = $score;
+        }
     }
 
     /**

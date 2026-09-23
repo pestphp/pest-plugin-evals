@@ -25,6 +25,6 @@ it('sends the reference answer and scores each category', function (): void {
 
     new Factuality()->score('input', 'output', 'expected');
 
-    expect($evaluation->state)->toBe(['input' => 'input', 'output' => 'output', 'expected' => 'expected'])
+    expect($evaluation->state)->toBe(['input' => 'input', 'output' => 'output', 'reference answer' => 'expected'])
         ->and(array_values($evaluation->levels))->toBe([0.0, 0.6, 0.8, 0.9, 1.0]);
 });

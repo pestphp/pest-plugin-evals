@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Pest\Evals\Configuration;
 use Pest\Evals\Contracts\RequiresJudge;
+use Pest\Evals\Eval\Verdict;
 use Pest\Evals\Events\Scored;
 use Pest\Evals\Scorers\Relevance;
 use Pest\Evals\Scorers\Scorer;
@@ -125,7 +126,7 @@ it('reports built-in scorer results through the public expectation API', functio
     $events = [];
 
     pest()->evals()
-        ->judgeUsing(fn (): string => '{"score":0.88,"reasoning":"direct answer"}')
+        ->judgeUsing(fn (): Verdict => new Verdict(0.88, 'direct answer'))
         ->afterScored(function (Scored $event) use (&$events): void {
             $events[] = $event;
         });

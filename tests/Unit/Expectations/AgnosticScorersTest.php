@@ -8,6 +8,8 @@ use Pest\Evals\Contracts\JudgeDriver;
 use Pest\Evals\Drivers\LaravelAiEmbeddings;
 use Pest\Evals\Drivers\LaravelAiJudge;
 use Pest\Evals\Eval\Context;
+use Pest\Evals\Eval\Evaluation;
+use Pest\Evals\Eval\Verdict;
 use Pest\Evals\Plugin;
 use Pest\Evals\Scorers\SemanticSimilarity;
 
@@ -27,10 +29,10 @@ describe('custom judge driver', function (): void {
     it('scores through an injected closure without laravel/ai', function (): void {
         $calls = [];
 
-        pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$calls): string {
-            $calls[] = [$instructions, $prompt];
+        pest()->evals()->judgeUsing(function (Evaluation $evaluation) use (&$calls): float {
+            $calls[] = $evaluation;
 
-            return '{"score": 1.0, "reasoning": "looks great"}';
+            return 1.0;
         });
 
         expect(fn (string $input): string => 'The capital of France is Paris.')
@@ -44,9 +46,9 @@ describe('custom judge driver', function (): void {
     it('accepts a contract instance', function (): void {
         $driver = new class implements JudgeDriver
         {
-            public function generate(string $instructions, string $prompt): string
+            public function judge(Evaluation $evaluation): Verdict
             {
-                return '{"score": 0.95, "category": "equal", "reasoning": "matches"}';
+                return new Verdict(1.0, 'matches');
             }
         };
 
@@ -63,10 +65,10 @@ describe('fluent aliases', function (): void {
     it('aliases toPassJudge as toSatisfy', function (): void {
         $calls = [];
 
-        pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$calls): string {
-            $calls[] = [$instructions, $prompt];
+        pest()->evals()->judgeUsing(function (Evaluation $evaluation) use (&$calls): float {
+            $calls[] = $evaluation;
 
-            return '{"score": 1.0, "reasoning": "looks great"}';
+            return 1.0;
         });
 
         expect(fn (string $input): string => 'The capital of France is Paris.')
@@ -79,9 +81,9 @@ describe('fluent aliases', function (): void {
     it('aliases toBeFactual as toBeCorrect', function (): void {
         $driver = new class implements JudgeDriver
         {
-            public function generate(string $instructions, string $prompt): string
+            public function judge(Evaluation $evaluation): Verdict
             {
-                return '{"score": 0.95, "category": "equal", "reasoning": "matches"}';
+                return new Verdict(1.0, 'matches');
             }
         };
 
@@ -127,7 +129,7 @@ describe('driver resolution', function (): void {
 
     it('resets injected drivers back to the defaults on flush', function (): void {
         pest()->evals()
-            ->judgeUsing(fn (string $instructions, string $prompt): string => '{"score": 1.0}')
+            ->judgeUsing(fn (Evaluation $evaluation): float => 1.0)
             ->embeddingsUsing(fn (array $inputs): array => [[1.0], [1.0]]);
 
         Configuration::flush();

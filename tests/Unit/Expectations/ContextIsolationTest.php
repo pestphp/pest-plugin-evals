@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Pest\Evals\Configuration;
 use Pest\Evals\Eval\Context;
+use Pest\Evals\Eval\Evaluation;
 use Pest\Evals\Plugin;
 
 beforeEach(function (): void {
@@ -21,10 +22,10 @@ afterEach(function (): void {
 it('sends the older expectation input to the judge, not the newer one', function (): void {
     $prompts = [];
 
-    pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$prompts): string {
-        $prompts[] = $prompt;
+    pest()->evals()->judgeUsing(function (Evaluation $evaluation) use (&$prompts): float {
+        $prompts[] = implode(' ', $evaluation->state);
 
-        return '{"score": 1.0, "reasoning": "looks great"}';
+        return 1.0;
     });
 
     $foo = expect(fn (string $input): string => 'An answer about alpha.')
@@ -53,10 +54,10 @@ it('sends the older expectation input to the judge, not the newer one', function
 it('scores the older expectation repeated samples, not the newer one', function (): void {
     $prompts = [];
 
-    pest()->evals()->judgeUsing(function (string $instructions, string $prompt) use (&$prompts): string {
-        $prompts[] = $prompt;
+    pest()->evals()->judgeUsing(function (Evaluation $evaluation) use (&$prompts): float {
+        $prompts[] = implode(' ', $evaluation->state);
 
-        return '{"score": 1.0, "reasoning": "looks great"}';
+        return 1.0;
     });
 
     $foo = expect(fn (string $input): string => 'ALPHA_OUTPUT')

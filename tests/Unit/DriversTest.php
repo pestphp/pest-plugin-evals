@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Pest\Evals\Drivers\LaravelAiClassifier;
 use Pest\Evals\Drivers\LaravelAiEmbeddings;
 use Pest\Evals\Drivers\LaravelAiJudge;
 
@@ -10,6 +11,8 @@ afterEach(function (): void {
     putenv('PEST_EVALS_LARAVEL_SCORING_MODEL');
     putenv('PEST_EVALS_LARAVEL_EMBEDDING_PROVIDER');
     putenv('PEST_EVALS_LARAVEL_EMBEDDING_MODEL');
+    putenv('PEST_EVALS_LARAVEL_CLASSIFICATION_PROVIDER');
+    putenv('PEST_EVALS_LARAVEL_CLASSIFICATION_MODEL');
 });
 
 describe('LaravelAiJudge', function (): void {
@@ -67,5 +70,37 @@ describe('LaravelAiEmbeddings', function (): void {
 
         expect($embeddings->provider)->toBe('cohere')
             ->and($embeddings->model)->toBe('embed-env');
+    });
+});
+
+describe('LaravelAiClassifier', function (): void {
+    it('defers to the laravel ai defaults when nothing is provided', function (): void {
+        $classifier = new LaravelAiClassifier();
+
+        expect($classifier->provider)->toBeNull()
+            ->and($classifier->model)->toBeNull();
+    });
+
+    it('accepts an explicit provider and model', function (): void {
+        $classifier = new LaravelAiClassifier(provider: 'typesafe', model: 'jev-latest');
+
+        expect($classifier->provider)->toBe('typesafe')
+            ->and($classifier->model)->toBe('jev-latest');
+    });
+
+    it('falls back to environment variables', function (): void {
+        putenv('PEST_EVALS_LARAVEL_CLASSIFICATION_PROVIDER=typesafe');
+        putenv('PEST_EVALS_LARAVEL_CLASSIFICATION_MODEL=jev-env');
+
+        $classifier = new LaravelAiClassifier();
+
+        expect($classifier->provider)->toBe('typesafe')
+            ->and($classifier->model)->toBe('jev-env');
+    });
+
+    it('prefers an explicit value over an env var', function (): void {
+        putenv('PEST_EVALS_LARAVEL_CLASSIFICATION_MODEL=jev-env');
+
+        expect(new LaravelAiClassifier(model: 'jev-explicit')->model)->toBe('jev-explicit');
     });
 });

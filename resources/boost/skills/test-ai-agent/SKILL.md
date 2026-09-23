@@ -65,6 +65,7 @@ Laravel AI provides judging and embeddings. OpenAI is the default when `OPENAI_A
 
 - `PEST_EVALS_LARAVEL_SCORING_PROVIDER` and `PEST_EVALS_LARAVEL_SCORING_MODEL`
 - `PEST_EVALS_LARAVEL_EMBEDDING_PROVIDER` and `PEST_EVALS_LARAVEL_EMBEDDING_MODEL`
+- `PEST_EVALS_LARAVEL_CLASSIFICATION_PROVIDER` and `PEST_EVALS_LARAVEL_CLASSIFICATION_MODEL`, when classification is on
 
 Or configure them in `tests/Pest.php`:
 
@@ -74,14 +75,14 @@ pest()->evals()
     ->embeddingsUsing(new LaravelAiEmbeddings(provider: 'openai', model: '...'));
 ```
 
-Judges grade the same structured evaluation: the state being judged (input, output, expected), a question, and the scorer's levels from worst to best. `LaravelAiJudge` asks a text model to pick a level and explain it through structured output. For much faster, cheaper judging, turn on classification instead; the classifier returns a probability for each level and the score is weighted by them:
+Judges grade the same structured evaluation: the state being judged (input, output, expected), a question, and the scorer's levels from worst to best. `LaravelAiJudge` asks a text model to pick a level and explain it through structured output. For much faster, cheaper judging, turn on classification instead with `judgeUsingLaravelAiClassifier()`; the classifier returns a probability for each level and the score is weighted by them:
 
 ```php
-pest()->evals()->classify(); // uses ai.default_for_classification and its default model
-pest()->evals()->classify(provider: 'typesafe', model: '...'); // override
+pest()->evals()->judgeUsingLaravelAiClassifier(); // uses ai.default_for_classification and its default model
+pest()->evals()->judgeUsingLaravelAiClassifier(provider: 'typesafe', model: '...'); // override
 ```
 
-`PEST_EVALS_LARAVEL_CLASSIFICATION_PROVIDER` and `PEST_EVALS_LARAVEL_CLASSIFICATION_MODEL` override per environment. `classify()` is shorthand for `judgeUsing(new LaravelAiClassifier(...))`, so a later `judgeUsing()` replaces it. Classification reports the chosen level, its probability, and its confidence rather than prose reasoning, so a failure says which level was chosen but not why; switch back to `LaravelAiJudge` to debug a failing eval.
+`judgeUsingLaravelAiClassifier()` is shorthand for `judgeUsing(new LaravelAiClassifier(...))`, so a later `judgeUsing()` replaces it. Classification reports the chosen level, its probability, and its confidence rather than prose reasoning, so a failure says which level was chosen but not why; switch back to `LaravelAiJudge` to debug a failing eval.
 
 The two judges score differently. `LaravelAiJudge` picks one level, so a default scorer lands on 0.0, 0.25, 0.5, 0.75, or 1.0. The classifier weights every level by its probability, so scores fall between levels, such as 0.95. A threshold tuned against one judge may not hold under the other; re-check thresholds after switching.
 

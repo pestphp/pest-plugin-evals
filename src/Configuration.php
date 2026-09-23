@@ -52,7 +52,7 @@ final class Configuration
         return $this;
     }
 
-    public function classify(?string $provider = null, ?string $model = null): self
+    public function judgeUsingLaravelAiClassifier(?string $provider = null, ?string $model = null): self
     {
         return $this->judgeUsing(new LaravelAiClassifier($provider, $model));
     }

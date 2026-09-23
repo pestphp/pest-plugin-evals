@@ -28,7 +28,7 @@ final class LaravelAiClassifier implements JudgeDriver
     {
         if (! class_exists(Classification::class)) {
             throw new RuntimeException(
-                'The classification judge requires [laravel/ai] 1.x. '
+                'The classifier judge driver requires the [laravel/ai] package. '
                 .'Install it with [composer require laravel/ai], or configure a '
                 .'custom driver via pest()->evals()->judgeUsing(...).'
             );

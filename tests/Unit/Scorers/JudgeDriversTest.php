@@ -23,7 +23,7 @@ uses(TestCase::class);
 afterEach(fn () => Configuration::flush());
 
 it('registers the classifier as the judge and keeps the eval gate', function (): void {
-    pest()->evals()->classify(provider: 'typesafe', model: 'jev-latest');
+    pest()->evals()->judgeUsingLaravelAiClassifier(provider: 'typesafe', model: 'jev-latest');
 
     expect(Configuration::resolvedJudge())->toBeInstanceOf(LaravelAiClassifier::class)
         ->and(Configuration::resolvedJudge()->provider)->toBe('typesafe')
@@ -64,7 +64,7 @@ it('rejects a judge closure that returns neither a score nor a verdict', functio
 })->throws(InvalidArgumentException::class, 'got [array]');
 
 it('is replaced by a later judge stub', function (): void {
-    pest()->evals()->classify()->judgeUsing(fn (Evaluation $evaluation): Verdict => new Verdict(1.0, 'stubbed'));
+    pest()->evals()->judgeUsingLaravelAiClassifier()->judgeUsing(fn (Evaluation $evaluation): Verdict => new Verdict(1.0, 'stubbed'));
 
     expect(Configuration::usesStubbedJudge())->toBeTrue()
         ->and(new Relevance()->score('q', 'a')->reasoning)->toBe('stubbed');
@@ -92,7 +92,7 @@ describe('laravel ai judge', function (): void {
 });
 
 describe('laravel ai classifier', function (): void {
-    beforeEach(fn () => pest()->evals()->classify(provider: 'typesafe'));
+    beforeEach(fn () => pest()->evals()->judgeUsingLaravelAiClassifier(provider: 'typesafe'));
 
     it('sends the state, question and levels as a score question', function (): void {
         Classification::fake([['verdict' => new ScoreAnswer(3.8, [0.0, 0.0, 0.0, 0.2, 0.8], [], 0.86)]]);

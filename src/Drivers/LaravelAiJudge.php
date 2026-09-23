@@ -21,7 +21,7 @@ final class LaravelAiJudge implements JudgeDriver
     public function __construct(?string $provider = null, ?string $model = null)
     {
         $this->provider = $provider ?? (getenv('PEST_EVALS_LARAVEL_SCORING_PROVIDER') ?: 'openai');
-        $this->model = $model ?? (getenv('PEST_EVALS_LARAVEL_SCORING_MODEL') ?: 'gpt-5.4-nano');
+        $this->model = $model ?? (getenv('PEST_EVALS_LARAVEL_SCORING_MODEL') ?: 'gpt-6-luna');
     }
 
     public function generate(string $instructions, string $prompt): string

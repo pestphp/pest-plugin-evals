@@ -26,13 +26,13 @@
     ],
     "require": {
         "php": "^8.4",
-        "pestphp/pest": "^5.0.3",
+        "pestphp/pest": "^5.2.1",
         "pestphp/pest-plugin": "^5.0.0"
     },
     "require-dev": {
         "laravel/ai": "^1.0",
-        "laravel/framework": "^13.23.0",
-        "orchestra/testbench": "^11.1.0",
+        "laravel/framework": "^13.33.0",
+        "orchestra/testbench": "^11.2.0",
         "pestphp/pest-dev-tools": "^5.0.0"
     },
     "conflict": {

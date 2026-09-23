@@ -17,7 +17,7 @@ describe('LaravelAiJudge', function (): void {
         $judge = new LaravelAiJudge();
 
         expect($judge->provider)->toBe('openai')
-            ->and($judge->model)->toBe('gpt-5.4-nano');
+            ->and($judge->model)->toBe('gpt-6-luna');
     });
 
     it('accepts an explicit provider and model', function (): void {

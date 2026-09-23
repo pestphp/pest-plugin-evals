@@ -12,7 +12,7 @@ use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Messages\UserMessage;
 use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Responses\Data\Meta;
-use Laravel\Ai\Responses\Data\Usage;
+use Laravel\Ai\Responses\Data\TextUsage;
 use Laravel\Ai\Responses\QueuedAgentResponse;
 use Laravel\Ai\Responses\StreamableAgentResponse;
 use Pest\Evals\Tests\Fixtures\Support\ContainerGreeting;
@@ -35,7 +35,7 @@ final readonly class InstanceGreetingAgent implements Agent
             throw new RuntimeException('Not implemented');
         }
 
-        return new AgentResponse('test', "{$this->greeting->prefix} {$prompt}", new Usage(), new Meta());
+        return new AgentResponse('test', "{$this->greeting->prefix} {$prompt}", new TextUsage(), new Meta());
     }
 
     public function stream(AgentInput|UserMessage|Decisions|string $prompt, array $attachments = [], Lab|array|string|null $provider = null, ?string $model = null, ?int $timeout = null): StreamableAgentResponse

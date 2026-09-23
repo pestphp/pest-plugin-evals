@@ -5,31 +5,22 @@ declare(strict_types=1);
 namespace Pest\Evals\Support;
 
 use Pest\Evals\Configuration;
+use Pest\Evals\Eval\Evaluation;
+use Pest\Evals\Scorers\ScorerResult;
 
-/**
- * @internal
- */
-final readonly class Judge
+final class Judge
 {
-    private function __construct(
-        private string $scorer,
-        private string $instructions,
-    ) {}
-
-    public static function using(string $scorer): self
+    /**
+     * @param  class-string  $scorer
+     */
+    public static function evaluate(string $scorer, Evaluation $evaluation): ScorerResult
     {
-        return new self($scorer, '');
-    }
+        $verdict = Configuration::resolvedJudge()->judge($evaluation);
 
-    public function instructions(string $instructions): self
-    {
-        return new self($this->scorer, $instructions);
-    }
-
-    public function prompt(string $prompt): JudgeResponse
-    {
-        $raw = Configuration::resolvedJudge()->generate($this->instructions, $prompt);
-
-        return new JudgeResponse($this->scorer, $raw);
+        return new ScorerResult(
+            score: max(0.0, min(1.0, $verdict->score)),
+            reasoning: $verdict->level === null ? $verdict->reasoning : "[{$verdict->level}] {$verdict->reasoning}",
+            scorer: $scorer,
+        );
     }
 }

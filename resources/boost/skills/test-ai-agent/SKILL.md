@@ -74,11 +74,24 @@ pest()->evals()
     ->embeddingsUsing(new LaravelAiEmbeddings(provider: 'openai', model: '...'));
 ```
 
-Use a fast, economical judge model appropriate to grading. For no-spend CI smoke coverage, `judgeUsing()` may receive a closure returning `['score' => 1.0, 'reasoning' => 'stubbed']`; it replaces judging while the eval gate remains in effect.
+Judges grade the same structured evaluation: the state being judged (input, output, expected), a question, and the scorer's levels from worst to best. `LaravelAiJudge` asks a text model to pick a level and explain it through structured output. For much faster, cheaper judging, turn on classification instead; the classifier returns a probability for each level and the score is weighted by them:
+
+```php
+pest()->evals()->classify(); // uses ai.default_for_classification and its default model
+pest()->evals()->classify(provider: 'typesafe', model: '...'); // override
+```
+
+`PEST_EVALS_LARAVEL_CLASSIFICATION_PROVIDER` and `PEST_EVALS_LARAVEL_CLASSIFICATION_MODEL` override per environment. `classify()` is shorthand for `judgeUsing(new LaravelAiClassifier(...))`, so a later `judgeUsing()` replaces it. Classification reports the chosen level, its probability, and its confidence rather than prose reasoning, so a failure says which level was chosen but not why; switch back to `LaravelAiJudge` to debug a failing eval.
+
+The two judges score differently. `LaravelAiJudge` picks one level, so a default scorer lands on 0.0, 0.25, 0.5, 0.75, or 1.0. The classifier weights every level by its probability, so scores fall between levels, such as 0.95. A threshold tuned against one judge may not hold under the other; re-check thresholds after switching.
+
+Only a `judgeUsing()` closure is treated as a stub. Every `JudgeDriver`, including a custom one, is assumed to call a model and runs only with `--evals`.
+
+Otherwise, use a fast, economical judge model appropriate to grading. For no-spend CI smoke coverage, `judgeUsing()` may receive a closure that takes a `Pest\Evals\Eval\Evaluation` and returns a score such as `1.0` or a `Pest\Evals\Eval\Verdict`; it replaces judging while the eval gate remains in effect. A custom driver implements `Pest\Evals\Contracts\JudgeDriver::judge(Evaluation $evaluation): Verdict`.
 
 ## Custom scorers
 
-Implement `Pest\\Evals\\Scorers\\Scorer::score(string $input, string $output, ?string $expected): ScorerResult`. Mark a scorer that calls a model with `RequiresJudge`, one that creates embeddings with `RequiresEmbeddings`, and one that does both with both markers. These markers keep API-backed scoring behind the eval gate; deterministic scorers remain available in ordinary test runs.
+Implement `Pest\\Evals\\Scorers\\Scorer::score(string $input, string $output, ?string $expected): ScorerResult`. Mark a scorer that calls a model with `RequiresJudge`, one that creates embeddings with `RequiresEmbeddings`, and one that does both with both markers. These markers keep API-backed scoring behind the eval gate; deterministic scorers remain available in ordinary test runs. A judged scorer returns `Pest\Evals\Support\Judge::evaluate(self::class, new Evaluation(state: [...], question: '...', levels: ['Worst' => 0.0, ..., 'Best' => 1.0]))`, so it works with every judge driver. Level scores must be between 0.0 and 1.0 and ascending. State keys become prompt headings, so name them descriptively (`'reference answer'`, not `'expected'`). A judge that returns no valid level throws rather than scoring zero.
 
 ## API lookup
 

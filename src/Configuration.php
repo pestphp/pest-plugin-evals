@@ -9,6 +9,7 @@ use Pest\Evals\Contracts\EmbeddingsDriver;
 use Pest\Evals\Contracts\JudgeDriver;
 use Pest\Evals\Drivers\ClosureEmbeddings;
 use Pest\Evals\Drivers\ClosureJudge;
+use Pest\Evals\Drivers\LaravelAiClassifier;
 use Pest\Evals\Drivers\LaravelAiEmbeddings;
 use Pest\Evals\Drivers\LaravelAiJudge;
 
@@ -28,9 +29,9 @@ final class Configuration
         return self::$embeddings ?? new LaravelAiEmbeddings();
     }
 
-    public static function usesDefaultJudge(): bool
+    public static function usesStubbedJudge(): bool
     {
-        return ! self::$judge instanceof JudgeDriver;
+        return self::$judge instanceof ClosureJudge;
     }
 
     public static function usesDefaultEmbeddings(): bool
@@ -49,6 +50,11 @@ final class Configuration
         self::$judge = $judge instanceof Closure ? new ClosureJudge($judge) : $judge;
 
         return $this;
+    }
+
+    public function classify(?string $provider = null, ?string $model = null): self
+    {
+        return $this->judgeUsing(new LaravelAiClassifier($provider, $model));
     }
 
     public function embeddingsUsing(EmbeddingsDriver|Closure $embeddings): self

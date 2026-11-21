@@ -39,7 +39,6 @@ final class LaravelAiJudge implements JudgeDriver
         $labels = $evaluation->labels();
         $levels = implode("\n", array_map(fn (int $index, string $label): string => "{$index}: {$label}", array_keys($labels), $labels));
 
-        /** @var AgentResponse $response */
         $response = agent(
             instructions: "You are an expert evaluator of AI agent responses. {$evaluation->question}\n\nChoose the number of the level, ordered from worst to best, that best describes the output:\n{$levels}",
             schema: fn (JsonSchema $schema): array => [
@@ -52,8 +51,13 @@ final class LaravelAiJudge implements JudgeDriver
             model: $this->model,
         );
 
+        return $this->verdictFromResponse($response, $evaluation);
+    }
+
+    private function verdictFromResponse(AgentResponse $response, Evaluation $evaluation): Verdict
+    {
         $verdict = $response instanceof StructuredAgentResponse ? $response->toArray() : [];
-        $level = is_numeric($verdict['level'] ?? null) ? ($labels[(int) $verdict['level']] ?? null) : null;
+        $level = is_numeric($verdict['level'] ?? null) ? ($evaluation->labels()[(int) $verdict['level']] ?? null) : null;
         $reasoning = is_string($verdict['reasoning'] ?? null) ? $verdict['reasoning'] : 'No reasoning provided.';
 
         if ($level === null) {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Evals\Drivers;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 use Pest\Evals\Contracts\JudgeDriver;
 use Pest\Evals\Eval\Evaluation;
@@ -38,6 +39,7 @@ final class LaravelAiJudge implements JudgeDriver
         $labels = $evaluation->labels();
         $levels = implode("\n", array_map(fn (int $index, string $label): string => "{$index}: {$label}", array_keys($labels), $labels));
 
+        /** @var AgentResponse $response */
         $response = agent(
             instructions: "You are an expert evaluator of AI agent responses. {$evaluation->question}\n\nChoose the number of the level, ordered from worst to best, that best describes the output:\n{$levels}",
             schema: fn (JsonSchema $schema): array => [

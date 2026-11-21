@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pest\Evals\Drivers;
 
 use Illuminate\Contracts\JsonSchema\JsonSchema;
+use Laravel\Ai\Responses\AgentResponse;
 use Laravel\Ai\Responses\StructuredAgentResponse;
 use Pest\Evals\Contracts\JudgeDriver;
 use Pest\Evals\Eval\Evaluation;
@@ -50,8 +51,13 @@ final class LaravelAiJudge implements JudgeDriver
             model: $this->model,
         );
 
+        return $this->verdictFromResponse($response, $evaluation);
+    }
+
+    private function verdictFromResponse(AgentResponse $response, Evaluation $evaluation): Verdict
+    {
         $verdict = $response instanceof StructuredAgentResponse ? $response->toArray() : [];
-        $level = is_numeric($verdict['level'] ?? null) ? ($labels[(int) $verdict['level']] ?? null) : null;
+        $level = is_numeric($verdict['level'] ?? null) ? ($evaluation->labels()[(int) $verdict['level']] ?? null) : null;
         $reasoning = is_string($verdict['reasoning'] ?? null) ? $verdict['reasoning'] : 'No reasoning provided.';
 
         if ($level === null) {

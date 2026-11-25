@@ -9,6 +9,7 @@ use Pest\Evals\Configuration;
 use Pest\Evals\Contracts\RequiresEmbeddings;
 use Pest\Evals\Contracts\RequiresJudge;
 use Pest\Evals\Eval\Context;
+use Pest\Evals\Events\Scored;
 use Pest\Evals\Plugin;
 use Pest\Evals\Support\VerbosePanel;
 
@@ -43,13 +44,23 @@ final class ScorerAssertion
             $result = $scorer->score($input, $sampleOutput, $expected);
 
             $scorerName = class_basename($result->scorer);
-            $passed = $result->score >= $threshold;
+            $event = new Scored(
+                result: $result,
+                threshold: $threshold,
+                input: $input,
+                output: $sampleOutput,
+                expected: $expected,
+                sample: $index + 1,
+                samples: $samples,
+            );
+
+            Configuration::dispatchScored($event);
 
             if (Plugin::isVerbose()) {
                 $this->panel->render(
                     scorer: $scorerName,
                     threshold: $threshold,
-                    passed: $passed,
+                    passed: $event->passed,
                     input: $input,
                     output: $sampleOutput,
                     reasoning: $result->reasoning,
